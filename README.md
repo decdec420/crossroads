@@ -25,6 +25,7 @@ supabase/
   functions/
     simulate-decision/   Edge Function: server-side reproducible engine
   database.types.ts      Generated TypeScript types for the client
+crossroads-mcp-server/   MCP server — the engine as tools for AI agents (stdio)
 ```
 
 ## Running the app
@@ -51,6 +52,10 @@ To apply the schema to a fresh project: `supabase db push` (or run `supabase/mig
 
 The same TypeScript/JS engine runs client-side (instant, private what-ifs) and server-side (reproducible, persisted). Its math — triangular sampling, exponential utility, P(best), dominance, weight-tornado, and nested-Monte-Carlo EVPPI — is unit-tested; the server port reproduces the client headline exactly.
 
+## Decision engine for AI agents (MCP)
+
+`crossroads-mcp-server/` exposes the engine as a Model Context Protocol server, so an AI agent can make rigorous, uncertainty-aware decisions instead of hand-waving. Two tools — `crossroads_analyze_decision` (P(best), dominance, sensitivity, value-of-information; risk-utility or prospect-theory value models) and `crossroads_quick_compare`. Pure local computation — no network, no keys. Build with `cd crossroads-mcp-server && npm install && npm run build`, then register `node <path>/dist/index.js` with Claude Desktop/Code or Cursor (see its README).
+
 ## Status
 
-Beta. Connected app + backend are live. Next on the roadmap: Stripe billing webhook and shareable decision-record reports (both already accounted for in the schema).
+Beta. Connected app + Supabase backend are live (migration `0002` fixes the decisions RLS policy so inserts via `RETURNING` succeed). The decision engine also ships as an MCP server for AI agents. Next on the roadmap: a hosted/metered MCP for monetization, Stripe billing, and shareable decision-record reports.

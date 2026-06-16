@@ -1,0 +1,39 @@
+{
+  "name": "crossroads-mcp-server",
+  "version": "1.0.0",
+  "description": "A decision-analysis engine (MCP server) for AI agents: probability-of-best, dominance, sensitivity, and value-of-information under uncertainty.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "crossroads-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "decision-analysis",
+    "monte-carlo",
+    "ai-agents",
+    "decision-making"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
