@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crossroads — decisions under uncertainty</title>
+<style>
+  :root{
+    --bg:#f4f2ed;--surface:#fff;--surface-2:#faf9f6;--ink:#1b1b29;--muted:#6b6b7b;--line:#e6e3db;
+    --accent:#5b4bdb;--accent-soft:#ece9fc;--accent-ink:#3a2fb0;--teal:#0d8f8f;--teal-soft:#dcefef;
+    --gold:#c98a13;--gold-soft:#fbf1d8;--good:#2f9e6b;--good-soft:#e7f4ee;--bad:#d1604a;--bad-soft:#fbeeeb;
+    --shadow:0 1px 2px rgba(27,27,41,.04),0 8px 30px rgba(27,27,41,.08);--radius:15px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 20px 80px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px;cursor:pointer}
+  .logo{width:38px;height:38px;flex:none}
+  .brand h1{font-size:19px;margin:0;letter-spacing:-.02em;font-weight:700;display:flex;align-items:center;gap:8px}
+  .badge{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5b4bdb,#0d8f8f);padding:2px 7px;border-radius:6px}
+  .brand p{margin:0;font-size:12.5px;color:var(--muted)}
+  .userbox{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+  input[type=text],input[type=email],input[type=password]{width:100%;padding:11px 13px;font-size:15px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;font-family:inherit}
+  input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .btn{font-family:inherit;font-size:14px;font-weight:600;padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s}
+  .btn:hover{border-color:#cfcbbf;background:var(--surface-2)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:#4e3fce}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}.btn.ghost:hover{color:var(--ink);background:var(--surface-2)}
+  .btn.small{padding:7px 12px;font-size:12.5px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px}
+  h2{margin:0 0 4px;font-size:19px;letter-spacing:-.015em}.sub{margin:0 0 20px;color:var(--muted);font-size:14px}
+  label.field{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  /* auth */
+  .auth-wrap{max-width:400px;margin:8vh auto 0}
+  .auth-wrap .card{padding:28px}
+  .tabs{display:flex;gap:6px;margin-bottom:18px}
+  .tabs button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);font-weight:600;font-size:13.5px;cursor:pointer;color:var(--muted);font-family:inherit}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:12px;display:none}
+  .msg.show{display:block}.msg.err{background:var(--bad-soft);color:#a8412e}.msg.ok{background:var(--good-soft);color:#1f6e4a}
+  .setup-note{font-size:11.5px;color:var(--muted);margin-top:16px;border-top:1px solid var(--line);padding-top:12px;line-height:1.5}
+  /* dashboard */
+  .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .dlist{display:grid;gap:10px}
+  .dcard{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(27,27,41,.04);cursor:pointer;transition:.15s}
+  .dcard:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+  .dcard .t{font-weight:600;font-size:15px}.dcard .m{font-size:12px;color:var(--muted);margin-top:2px}
+  .dcard .st{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-ink)}
+  .empty{text-align:center;color:var(--muted);padding:34px 14px}
+  .sec-title{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:24px 0 10px}
+  .tpls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:620px){.tpls{grid-template-columns:1fr}}
+  .tpl{padding:13px 15px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2);cursor:pointer;transition:.15s}
+  .tpl:hover{border-color:var(--accent);background:#fff}
+  .tpl .t{font-weight:600;font-size:13.5px}.tpl .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+  /* stepper + editor */
+  .stepper{display:flex;gap:6px;margin-bottom:18px}
+  .stepper .step{flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:11px;font-size:13px;color:var(--muted);cursor:pointer}
+  .stepper .step .num{width:21px;height:21px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);font-size:11px;font-weight:700}
+  .stepper .step.active{background:var(--accent);border-color:var(--accent);color:#fff}.stepper .step.active .num{background:rgba(255,255,255,.22);border-color:transparent;color:#fff}
+  .stepper .step.done .num{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+  @media(max-width:640px){.stepper .step .lbl{display:none}.stepper .step{justify-content:center}}
+  .row{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .row input{flex:1}
+  .icon-btn{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:15px}
+  .icon-btn:hover{color:var(--bad);border-color:#e7c4bc;background:#fdf3f0}
+  .add-btn{margin-top:4px;padding:10px 14px;border-radius:10px;border:1.5px dashed #d3cfc4;background:transparent;color:var(--accent-ink);font-weight:600;font-size:13.5px;cursor:pointer;width:100%;font-family:inherit}
+  .add-btn:hover{background:var(--accent-soft);border-color:var(--accent)}
+  .footer-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;gap:10px}
+  .crit{padding:14px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:var(--surface-2)}
+  .ctl{margin-top:10px}.ctl .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .ctl .nm{font-weight:600;font-size:13px}.ctl .v{font-size:11.5px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);padding:2px 9px;border-radius:20px}
+  input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:6px;background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:19px;height:19px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(91,75,219,.4)}
+  .seg{display:flex;gap:5px;margin-top:8px}
+  .seg button{flex:1;padding:6px 4px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  .seg button.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+  .egrid{overflow-x:auto}table.est{border-collapse:collapse;width:100%;min-width:460px}
+  table.est th,table.est td{padding:9px;border-bottom:1px solid var(--line);text-align:center}
+  table.est th.lead,table.est td.lead{text-align:left;font-weight:600}
+  table.est thead th{font-size:12.5px;background:var(--surface-2)}table.est thead th small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
+  .num-in{width:58px;padding:7px;text-align:center;font-size:14px;font-weight:600;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);font-family:inherit}
+  .band{font-size:10px;color:var(--muted);margin-top:3px}
+  .winner{background:linear-gradient(135deg,#241f4a,#3f34a0 55%,#0d6f7a);color:#fff;border-radius:var(--radius);padding:22px 24px;margin-bottom:16px}
+  .winner .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.82;margin:0 0 5px;font-weight:600}
+  .winner .wname{font-size:25px;font-weight:700;margin:0;letter-spacing:-.02em}.winner .verdict{margin:10px 0 0;font-size:14px;opacity:.95}
+  .stitle{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:20px 0 10px}
+  .pbar{margin-bottom:14px}.pbar .top{display:flex;align-items:baseline;gap:9px;margin-bottom:6px}
+  .pbar .nm{font-weight:600;font-size:14.5px;flex:1}.pbar .pb{font-weight:800;font-size:15px}.pbar .ev{font-size:11.5px;color:var(--muted)}
+  .track{position:relative;height:28px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .track .ci{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(91,75,219,.1),rgba(91,75,219,.1) 6px,rgba(91,75,219,.18) 6px,rgba(91,75,219,.18) 12px);border-left:1px solid rgba(91,75,219,.35);border-right:1px solid rgba(91,75,219,.35)}
+  .track .mean{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--accent)}
+  .pbar.first .track .ci{background:repeating-linear-gradient(45deg,rgba(201,138,19,.12),rgba(201,138,19,.12) 6px,rgba(201,138,19,.22) 6px,rgba(201,138,19,.22) 12px);border-color:rgba(201,138,19,.4)}.pbar.first .track .mean{background:var(--gold)}
+  .insight{display:flex;gap:12px;padding:15px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);margin-top:11px}
+  .insight .ic{width:32px;height:32px;border-radius:9px;flex:none;display:grid;place-items:center;font-size:16px;background:var(--accent-soft)}
+  .insight .ic.gold{background:var(--gold-soft)}.insight .ic.bad{background:var(--bad-soft)}.insight .ic.teal{background:#dff1f1}
+  .insight h4{margin:0 0 3px;font-size:13.5px}.insight p{margin:0;font-size:13px;color:#4a4a58}
+  .evrow,.torrow{display:grid;grid-template-columns:140px 1fr 52px;gap:11px;align-items:center;margin-bottom:8px}
+  .evrow .lab,.torrow .lab{font-size:13px;font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meter{height:21px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;overflow:hidden;position:relative}
+  .meter>span{display:block;height:100%;border-radius:6px;transition:width .5s}
+  .evrow .meter>span{background:linear-gradient(90deg,#16a085,#0d8f8f)}.torrow .meter>span{background:linear-gradient(90deg,#7a6ce8,#5b4bdb)}
+  .evrow .val,.torrow .val{font-size:12px;font-weight:700;color:var(--muted);text-align:left}
+  .flip{font-size:10.5px;color:var(--bad);font-weight:600}
+  .modelbar{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;padding:15px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);margin-bottom:16px}
+  .modelbar .mb{flex:1;min-width:170px}.modelbar .mb .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .modelbar label{font-size:12px;font-weight:700;color:var(--muted)}.modelbar .v{font-size:11.5px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);padding:2px 9px;border-radius:20px}
+  .gut{margin-top:16px;padding:16px;border-radius:12px;border:1px dashed #cfcbbf;background:#fff}
+  .gut h4{margin:0 0 4px;font-size:14.5px}.gut p{margin:0 0 12px;font-size:13px;color:var(--muted)}.gut .choices{display:flex;gap:8px;flex-wrap:wrap}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 17px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .loading{text-align:center;color:var(--muted);padding:40px}
+  .hint{font-size:12px;color:var(--muted);margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand" id="brand">
+      <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="11" fill="url(#g)"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#5b4bdb"/><stop offset="1" stop-color="#0d8f8f"/></linearGradient></defs>
+        <path d="M24 9v11m0 0l-9 9m9-9l9 9" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="9.5" r="3.3" fill="#fff"/><circle cx="14" cy="30" r="3.3" fill="#cfe9e6"/><circle cx="34" cy="30" r="3.3" fill="#cfe9e6"/>
+      </svg>
+      <div><h1>Crossroads <span class="badge">beta</span></h1><p>decisions under uncertainty</p></div>
+    </div>
+    <div class="userbox" id="userbox"></div>
+  </div>
+  <main id="main"><div class="loading">Loading…</div></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://rgbgstcipidkrcjofins.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnYmdzdGNpcGlka3Jjam9maW5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NzUzNTUsImV4cCI6MjA5NzE1MTM1NX0.XurMl2HKnD0XjiVBCESU5WoEamn2hz80A4Sa-R1BRqM';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ============================ verified decision engine ============================ */
+const Engine = {
+  rng: Math.random,
+  seed(n){ let a=n>>>0; this.rng=function(){a|=0;a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296;}; },
+  BAND:{low:1,med:2,high:3}, clamp(x,a,b){return x<a?a:x>b?b:x;},
+  triangular(lo,ml,hi){ if(hi<=lo)return lo; ml=this.clamp(ml,lo,hi); const u=this.rng(),c=(ml-lo)/(hi-lo); return u<c?lo+Math.sqrt(u*(hi-lo)*(ml-lo)):hi-Math.sqrt((1-u)*(hi-lo)*(hi-ml)); },
+  utility(p,risk){ p=this.clamp(p,0,1); const a=-risk*3.5; if(Math.abs(a)<1e-6)return p; return (1-Math.exp(-a*p))/(1-Math.exp(-a)); },
+  band(c){return this.BAND[c.uncertainty]||2;}, loOf(c,o){return this.clamp((c.cells[o]||0)-this.band(c),0,10);}, hiOf(c,o){return this.clamp((c.cells[o]||0)+this.band(c),0,10);},
+  normWeights(cr){const t=cr.reduce((s,c)=>s+(c.weight||0),0)||1;return cr.map(c=>(c.weight||0)/t);},
+  simulate(dec,N){
+    const W=this.normWeights(dec.criteria),O=dec.options.length;
+    const vals=Array.from({length:O},()=>[]),wins=new Array(O).fill(0);
+    const meanU=Array.from({length:O},()=>new Array(dec.criteria.length).fill(0));
+    let sumMaxPerfect=0;
+    for(let t=0;t<N;t++){const tv=new Array(O).fill(0);let best=-Infinity,bi=0;
+      dec.options.forEach((o,oi)=>{let v=0;dec.criteria.forEach((c,ci)=>{const u=this.utility(this.triangular(this.loOf(c,o.id),c.cells[o.id]||0,this.hiOf(c,o.id))/10,dec.risk);meanU[oi][ci]+=u;v+=W[ci]*u;});tv[oi]=v;vals[oi].push(v);if(v>best){best=v;bi=oi;}});
+      wins[bi]++;sumMaxPerfect+=best;}
+    const per=dec.options.map((o,oi)=>{const arr=vals[oi].slice().sort((a,b)=>a-b);const q=p=>arr[Math.min(arr.length-1,Math.floor(p*arr.length))];const mean=arr.reduce((s,x)=>s+x,0)/arr.length;return {id:o.id,name:o.name,mean,p10:q(.1),p50:q(.5),p90:q(.9),pBest:wins[oi]/N};});
+    for(let oi=0;oi<O;oi++)for(let ci=0;ci<dec.criteria.length;ci++)meanU[oi][ci]/=N;
+    const baseline=Math.max(...per.map(p=>p.mean));const evpi=Math.max(0,sumMaxPerfect/N-baseline);
+    return {per,byEV:per.slice().sort((a,b)=>b.mean-a.mean),evpi,baseline,meanU};
+  },
+  dominance(dec){const out=[];dec.options.forEach(a=>dec.options.forEach(b=>{if(a.id===b.id)return;let ge=true,gt=false;dec.criteria.forEach(c=>{const av=c.cells[a.id]||0,bv=c.cells[b.id]||0;if(av<bv)ge=false;if(av>bv)gt=true;});if(ge&&gt)out.push({winner:a.name,loser:b.name,loserId:b.id});}));return out;},
+  tornado(dec,sim){const crit=dec.criteria;const li=dec.options.findIndex(o=>o.id===sim.byEV[0].id);
+    const evW=rw=>{const t=rw.reduce((s,x)=>s+x,0)||1;const w=rw.map(x=>x/t);const ev=dec.options.map((_,oi)=>w.reduce((s,_w,ci)=>s+w[ci]*sim.meanU[oi][ci],0));const lead=ev[li];let br=-Infinity;ev.forEach((e,oi)=>{if(oi!==li&&e>br)br=e;});return lead-br;};
+    const base=crit.map(c=>c.weight||0);const rows=crit.map((c,ci)=>{const lo=base.slice();lo[ci]=0;const hi=base.slice();hi[ci]=(base[ci]||1e-4)*2;const mLo=evW(lo),mHi=evW(hi);return {name:c.name,swing:Math.abs(mHi-mLo),flips:(mLo<0)!==(mHi<0)};});
+    rows.sort((a,b)=>b.swing-a.swing);return rows;},
+  evppi(dec,M,K){const W=this.normWeights(dec.criteria),crit=dec.criteria,opts=dec.options;const meanV=opts.map(()=>0);const Kb=Math.max(K,200);
+    for(let k=0;k<Kb;k++)opts.forEach((o,oi)=>{let v=0;crit.forEach((c,ci)=>v+=W[ci]*this.utility(this.triangular(this.loOf(c,o.id),c.cells[o.id]||0,this.hiOf(c,o.id))/10,dec.risk));meanV[oi]+=v;});
+    for(let oi=0;oi<opts.length;oi++)meanV[oi]/=Kb;const baseline=Math.max(...meanV);
+    return crit.map((cT,cti)=>{let om=0;for(let m=0;m<M;m++){const fx=opts.map(o=>this.utility(this.triangular(this.loOf(cT,o.id),cT.cells[o.id]||0,this.hiOf(cT,o.id))/10,dec.risk));const inner=opts.map(()=>0);
+      for(let k=0;k<K;k++)opts.forEach((o,oi)=>{let v=W[cti]*fx[oi];crit.forEach((c,ci)=>{if(ci!==cti)v+=W[ci]*this.utility(this.triangular(this.loOf(c,o.id),c.cells[o.id]||0,this.hiOf(c,o.id))/10,dec.risk);});inner[oi]+=v;});
+      let mx=-Infinity;inner.forEach(s=>{const e=s/K;if(e>mx)mx=e;});om+=mx;}return {name:cT.name,value:Math.max(0,om/M-baseline)};});}
+};
+function hashDec(dec){const str=JSON.stringify({o:dec.options.map(o=>o.name),c:dec.criteria.map(c=>[c.name,c.weight,c.uncertainty,dec.options.map(o=>c.cells[o.id])]),r:dec.risk});let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+
+/* ============================ app state & helpers ============================ */
+const uid = () => crypto.randomUUID();
+const $ = (s,e=document)=>e.querySelector(s);
+const esc = s => (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const UNC={low:'Confident',med:'Somewhat unsure',high:'Very unsure'};
+let App = { view:'auth', session:null, decisions:[], templates:[], D:null };
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
+function blankDecision(){return {id:uid(),participantId:uid(),title:'',description:'',mode:'pro',risk:0,trials:6000,status:'draft',step:1,gut:null,
+  options:[{id:uid(),name:''},{id:uid(),name:''}],criteria:[{id:uid(),name:'',uncertainty:'med',weight:50,cells:{}}]};}
+const validOpts=()=>App.D.options.filter(o=>o.name.trim());
+const validCrit=()=>App.D.criteria.filter(c=>c.name.trim());
+
+/* ============================ data layer (Supabase) ============================ */
+async function listDecisions(){const {data,error}=await sb.from('decisions').select('id,title,status,updated_at').order('updated_at',{ascending:false});if(error)throw error;return data;}
+async function listTemplates(){const {data}=await sb.from('templates').select('*').eq('is_official',true).order('title');return data||[];}
+async function deleteDecision(id){const {error}=await sb.from('decisions').delete().eq('id',id);if(error)throw error;}
+
+async function saveDecision(D){
+  const uidv = App.session.user.id;
+  let r = await sb.from('decisions').upsert({id:D.id,owner_id:uidv,title:D.title.trim()||'Untitled decision',description:D.description||null,mode:D.mode,risk:D.risk,trials:D.trials,status:D.status==='draft'?'active':D.status});
+  if(r.error) throw r.error;
+  r = await sb.from('decision_participants').upsert({id:D.participantId,decision_id:D.id,user_id:uidv,role:'owner',display_name:App.session.user.email||'Me'});
+  if(r.error) throw r.error;
+  const opts=validOpts().map((o,i)=>({id:o.id,decision_id:D.id,name:o.name.trim(),position:i}));
+  const crits=validCrit().map((c,i)=>({id:c.id,decision_id:D.id,name:c.name.trim(),uncertainty:c.uncertainty,default_weight:c.weight,position:i}));
+  if(opts.length){r=await sb.from('options').upsert(opts);if(r.error)throw r.error;}
+  if(crits.length){r=await sb.from('criteria').upsert(crits);if(r.error)throw r.error;}
+  const optIds=opts.map(o=>o.id), critIds=crits.map(c=>c.id);
+  if(optIds.length) await sb.from('options').delete().eq('decision_id',D.id).not('id','in','('+optIds.join(',')+')');
+  if(critIds.length) await sb.from('criteria').delete().eq('decision_id',D.id).not('id','in','('+critIds.join(',')+')');
+  const weights=crits.map(c=>({decision_id:D.id,participant_id:D.participantId,criterion_id:c.id,weight:c.default_weight}));
+  if(weights.length){r=await sb.from('input_weights').upsert(weights,{onConflict:'participant_id,criterion_id'});if(r.error)throw r.error;}
+  const scores=[];
+  validCrit().forEach(c=>validOpts().forEach(o=>{const v=c.cells[o.id];if(v!==undefined&&v!==null&&v!=='')scores.push({decision_id:D.id,participant_id:D.participantId,option_id:o.id,criterion_id:c.id,likely:Number(v)});}));
+  if(scores.length){r=await sb.from('input_scores').upsert(scores,{onConflict:'participant_id,option_id,criterion_id'});if(r.error)throw r.error;}
+  D.status='active';
+}
+
+async function loadDecision(id){
+  const uidv=App.session.user.id;
+  const [d,opts,crit,parts,wts,scs]=await Promise.all([
+    sb.from('decisions').select('*').eq('id',id).single(),
+    sb.from('options').select('*').eq('decision_id',id).order('position'),
+    sb.from('criteria').select('*').eq('decision_id',id).order('position'),
+    sb.from('decision_participants').select('*').eq('decision_id',id),
+    sb.from('input_weights').select('*').eq('decision_id',id),
+    sb.from('input_scores').select('*').eq('decision_id',id),
+  ]);
+  if(d.error) throw d.error;
+  let part=(parts.data||[]).find(p=>p.user_id===uidv)||(parts.data||[])[0];
+  const participantId = part? part.id : uid();
+  const wById={}; (wts.data||[]).filter(w=>!part||w.participant_id===part.id).forEach(w=>wById[w.criterion_id]=Number(w.weight));
+  const criteria=(crit.data||[]).map(c=>({id:c.id,name:c.name,uncertainty:c.uncertainty,weight:wById[c.id]!==undefined?wById[c.id]:Number(c.default_weight),cells:{}}));
+  const cIndex={}; criteria.forEach(c=>cIndex[c.id]=c);
+  (scs.data||[]).filter(s=>!part||s.participant_id===part.id).forEach(s=>{if(cIndex[s.criterion_id])cIndex[s.criterion_id].cells[s.option_id]=Number(s.likely);});
+  return {id:d.data.id,participantId,title:d.data.title,description:d.data.description||'',mode:d.data.mode,risk:Number(d.data.risk),trials:d.data.trials,status:d.data.status,step:1,gut:null,
+    options:(opts.data||[]).map(o=>({id:o.id,name:o.name})),criteria:criteria.length?criteria:[{id:uid(),name:'',uncertainty:'med',weight:50,cells:{}}]};
+}
+
+async function runOnServer(D){
+  const {data:{session}}=await sb.auth.getSession();
+  const res=await fetch(SUPABASE_URL+'/functions/v1/simulate-decision',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+    body:JSON.stringify({decisionId:D.id,aggregation:'individual',participantId:D.participantId,trials:D.trials,computeEvppi:true})});
+  if(!res.ok) throw new Error('server '+res.status);
+  return res.json();
+}
+
+/* ============================ auth ============================ */
+function viewAuth(){
+  const c=document.createElement('div');c.className='auth-wrap';
+  c.innerHTML=`<div class="card">
+    <h2>Welcome to Crossroads</h2><p class="sub">Sign in to save your decisions and run them on the server.</p>
+    <div class="tabs"><button class="on" id="tab-in">Sign in</button><button id="tab-up">Create account</button></div>
+    <label class="field">Email</label><input type="email" id="email" placeholder="you@example.com"/>
+    <div style="height:12px"></div>
+    <label class="field">Password</label><input type="password" id="pw" placeholder="••••••••"/>
+    <div style="height:16px"></div>
+    <button class="btn primary" id="go" style="width:100%">Sign in</button>
+    <div class="msg" id="msg"></div>
+    <div class="setup-note">First time testing? In Supabase → Authentication → Providers → Email, turn off <b>“Confirm email”</b> so sign-up logs you in instantly.</div>
+  </div>`;
+  let mode='in';
+  const setMode=m=>{mode=m;c.querySelector('#tab-in').classList.toggle('on',m==='in');c.querySelector('#tab-up').classList.toggle('on',m==='up');c.querySelector('#go').textContent=m==='in'?'Sign in':'Create account';};
+  c.querySelector('#tab-in').onclick=()=>setMode('in');
+  c.querySelector('#tab-up').onclick=()=>setMode('up');
+  const msg=(t,ok)=>{const m=c.querySelector('#msg');m.textContent=t;m.className='msg show '+(ok?'ok':'err');};
+  c.querySelector('#go').onclick=async()=>{
+    const email=c.querySelector('#email').value.trim(),pw=c.querySelector('#pw').value;
+    if(!email||!pw)return msg('Enter an email and password.');
+    const btn=c.querySelector('#go');btn.disabled=true;btn.innerHTML='<span class="spin"></span>Working…';
+    try{
+      if(mode==='up'){
+        const {data,error}=await sb.auth.signUp({email,password:pw});
+        if(error)throw error;
+        if(!data.session){msg('Account created. Check your email to confirm, then sign in.',true);setMode('in');}
+      }else{
+        const {error}=await sb.auth.signInWithPassword({email,password:pw});
+        if(error)throw error;
+      }
+    }catch(e){msg(e.message||'Something went wrong.');}
+    finally{btn.disabled=false;btn.textContent=mode==='in'?'Sign in':'Create account';}
+  };
+  return c;
+}
+
+/* ============================ dashboard ============================ */
+async function showDashboard(){
+  App.view='dashboard'; renderUserbox();
+  $('#main').innerHTML='<div class="loading">Loading your decisions…</div>';
+  let decisions=[],templates=[];
+  try{[decisions,templates]=await Promise.all([listDecisions(),App.templates.length?Promise.resolve(App.templates):listTemplates()]);}
+  catch(e){$('#main').innerHTML='<div class="card"><p>Couldn\'t load: '+esc(e.message||'')+'</p></div>';return;}
+  App.decisions=decisions; App.templates=templates;
+  const c=document.createElement('div');
+  c.innerHTML=`<div class="dash-head"><h2>Your decisions</h2><button class="btn primary" id="new">+ New decision</button></div><div class="dlist" id="dlist"></div>
+    <div class="sec-title">Start from a template</div><div class="tpls" id="tpls"></div>`;
+  const dl=c.querySelector('#dlist');
+  if(!decisions.length) dl.innerHTML='<div class="empty">No decisions yet. Create one, or start from a template below.</div>';
+  decisions.forEach(d=>{const row=document.createElement('div');row.className='dcard';
+    row.innerHTML=`<div><div class="t">${esc(d.title)}</div><div class="m">updated ${new Date(d.updated_at).toLocaleDateString()}</div></div>
+      <div style="display:flex;gap:10px;align-items:center"><span class="st">${esc(d.status)}</span><button class="icon-btn" title="Delete">✕</button></div>`;
+    row.querySelector('.t').parentElement.onclick=async()=>{try{App.D=await loadDecision(d.id);App.D.step=4;showEditor();}catch(e){toast('Load failed: '+(e.message||''));}};
+    row.onclick=async(ev)=>{if(ev.target.closest('.icon-btn'))return;try{App.D=await loadDecision(d.id);App.D.step=4;showEditor();}catch(e){toast('Load failed');}};
+    row.querySelector('.icon-btn').onclick=async(ev)=>{ev.stopPropagation();if(!confirm('Delete “'+d.title+'”?'))return;try{await deleteDecision(d.id);toast('Deleted.');showDashboard();}catch(e){toast('Delete failed');}};
+    dl.appendChild(row);});
+  const tp=c.querySelector('#tpls');
+  templates.forEach(t=>{const el=document.createElement('div');el.className='tpl';
+    el.innerHTML=`<div class="t">${esc(t.title)}</div><div class="d">${esc(t.description||'')}</div>`;
+    el.onclick=()=>{App.D=fromTemplate(t);showEditor();};tp.appendChild(el);});
+  c.querySelector('#new').onclick=()=>{App.D=blankDecision();showEditor();};
+  $('#main').innerHTML='';$('#main').appendChild(c);
+}
+function fromTemplate(t){
+  const D=blankDecision();D.title=t.title;
+  const p=t.payload||{};
+  D.options=(p.options||['Option A','Option B']).map(n=>({id:uid(),name:n}));
+  D.criteria=(p.criteria||[]).map(c=>({id:uid(),name:c.name,uncertainty:c.uncertainty||'med',weight:c.default_weight??50,cells:{}}));
+  if(!D.criteria.length)D.criteria=[{id:uid(),name:'',uncertainty:'med',weight:50,cells:{}}];
+  return D;
+}
+
+/* ============================ editor ============================ */
+const STEPS=[{n:1,l:'Frame'},{n:2,l:'Criteria'},{n:3,l:'Estimates'},{n:4,l:'Simulate'}];
+function showEditor(){App.view='editor';renderUserbox();renderEditor();}
+function renderEditor(){
+  const m=$('#main');m.innerHTML='';
+  const bar=document.createElement('div');bar.className='stepper';
+  STEPS.forEach(s=>{const b=document.createElement('button');b.className='step'+(App.D.step===s.n?' active':'')+(App.D.step>s.n?' done':'');
+    b.innerHTML=`<span class="num">${App.D.step>s.n?'✓':s.n}</span><span class="lbl">${s.l}</span>`;
+    b.onclick=()=>{App.D.step=s.n;renderEditor();};bar.appendChild(b);});
+  m.appendChild(bar);
+  m.appendChild(App.D.step===1?edFrame():App.D.step===2?edCriteria():App.D.step===3?edEstimates():edResults());
+}
+function backToDash(){return ()=>{showDashboard();};}
+
+function edFrame(){
+  const D=App.D;const c=document.createElement('div');c.className='card';
+  c.innerHTML=`<h2>What are you deciding?</h2><p class="sub">Name it and list the options.</p>
+    <label class="field">The decision</label><input type="text" id="title" placeholder="e.g. Which job offer?" value="${esc(D.title)}"/>
+    <div style="height:18px"></div><label class="field">Options</label><div id="opts"></div>
+    <button class="add-btn" id="addopt">+ Add option</button>
+    <div class="footer-nav"><button class="btn ghost" id="dash">← All decisions</button><button class="btn primary" id="nx">Next →</button></div>`;
+  c.querySelector('#title').addEventListener('input',e=>D.title=e.target.value);
+  const ob=c.querySelector('#opts');D.options.forEach((o,i)=>{const r=document.createElement('div');r.className='row';
+    r.innerHTML=`<input type="text" placeholder="Option ${i+1}" value="${esc(o.name)}"/><button class="icon-btn">✕</button>`;
+    r.querySelector('input').addEventListener('input',e=>o.name=e.target.value);
+    r.querySelector('.icon-btn').onclick=()=>{if(D.options.length<=2)return toast('Need ≥ 2 options.');D.options=D.options.filter(x=>x.id!==o.id);D.criteria.forEach(c=>delete c.cells[o.id]);renderEditor();};
+    ob.appendChild(r);});
+  c.querySelector('#addopt').onclick=()=>{D.options.push({id:uid(),name:''});renderEditor();};
+  c.querySelector('#dash').onclick=backToDash();
+  c.querySelector('#nx').onclick=()=>{if(!D.title.trim())return toast('Name the decision.');if(validOpts().length<2)return toast('Add two options.');D.step=2;renderEditor();};
+  return c;
+}
+function edCriteria(){
+  const D=App.D;const c=document.createElement('div');c.className='card';
+  c.innerHTML=`<h2>What matters — and how sure are you?</h2><p class="sub">Set each criterion's weight and your confidence in its scores.</p>
+    <div id="cr"></div><button class="add-btn" id="addc">+ Add criterion</button>
+    <div class="footer-nav"><button class="btn" id="bk">← Back</button><button class="btn primary" id="nx">Next →</button></div>`;
+  const box=c.querySelector('#cr');
+  D.criteria.forEach((cr,i)=>{const r=document.createElement('div');r.className='crit';
+    r.innerHTML=`<div class="row"><input type="text" placeholder="Criterion ${i+1} — e.g. Cost, Growth" value="${esc(cr.name)}"/><button class="icon-btn">✕</button></div>
+      <div class="ctl"><div class="top"><span class="nm">Weight</span><span class="v wv">${cr.weight}</span></div><input type="range" min="0" max="100" step="5" value="${cr.weight}" class="wr"/></div>
+      <div class="ctl"><div class="top"><span class="nm">Confidence in scores</span><span class="v uv">${UNC[cr.uncertainty]}</span></div>
+        <div class="seg"><button data-u="low" class="${cr.uncertainty==='low'?'sel':''}">Confident ±1</button><button data-u="med" class="${cr.uncertainty==='med'?'sel':''}">Unsure ±2</button><button data-u="high" class="${cr.uncertainty==='high'?'sel':''}">Very unsure ±3</button></div></div>`;
+    r.querySelector('input[type=text]').addEventListener('input',e=>cr.name=e.target.value);
+    const wr=r.querySelector('.wr'),wv=r.querySelector('.wv');wr.addEventListener('input',e=>{cr.weight=+e.target.value;wv.textContent=cr.weight;});
+    r.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{cr.uncertainty=b.dataset.u;r.querySelectorAll('.seg button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');r.querySelector('.uv').textContent=UNC[cr.uncertainty];});
+    r.querySelector('.icon-btn').onclick=()=>{if(D.criteria.length<=1)return toast('Keep ≥ 1 criterion.');D.criteria=D.criteria.filter(x=>x.id!==cr.id);renderEditor();};
+    box.appendChild(r);});
+  c.querySelector('#addc').onclick=()=>{D.criteria.push({id:uid(),name:'',uncertainty:'med',weight:50,cells:{}});renderEditor();};
+  c.querySelector('#bk').onclick=()=>{D.step=1;renderEditor();};
+  c.querySelector('#nx').onclick=()=>{if(validCrit().length<1)return toast('Add a criterion.');D.step=3;renderEditor();};
+  return c;
+}
+function edEstimates(){
+  const D=App.D;const c=document.createElement('div');c.className='card';const opts=validOpts(),crit=validCrit();
+  let head='<thead><tr><th class="lead">Criterion</th>';opts.forEach(o=>head+=`<th>${esc(o.name)}<small>0–10</small></th>`);head+='</tr></thead>';
+  let body='<tbody>';crit.forEach(cr=>{body+=`<tr><td class="lead">${esc(cr.name)}<div class="band">${UNC[cr.uncertainty]} · ±${Engine.BAND[cr.uncertainty]}</div></td>`;
+    opts.forEach(o=>{const v=cr.cells[o.id]!==undefined?cr.cells[o.id]:'';body+=`<td><input class="num-in" type="number" min="0" max="10" step="0.5" data-c="${cr.id}" data-o="${o.id}" value="${v}"/><div class="band" data-b="${cr.id}-${o.id}"></div></td>`;});body+='</tr>';});body+='</tbody>';
+  c.innerHTML=`<h2>Score each option (0 = poor, 10 = excellent)</h2><p class="sub">Best guess per cell; the confidence you set widens it into a range.</p>
+    <div class="egrid"><table class="est">${head}${body}</table></div>
+    <div class="footer-nav"><button class="btn" id="bk">← Back</button><button class="btn primary" id="nx">Simulate →</button></div>`;
+  c.querySelectorAll('.num-in').forEach(inp=>{const cr=D.criteria.find(x=>x.id===inp.dataset.c);const upd=()=>{const raw=inp.value===''?undefined:Engine.clamp(parseFloat(inp.value)||0,0,10);if(raw===undefined)delete cr.cells[inp.dataset.o];else cr.cells[inp.dataset.o]=raw;const bd=c.querySelector(`[data-b="${inp.dataset.c}-${inp.dataset.o}"]`);if(bd)bd.textContent=raw!==undefined?`${Engine.clamp(raw-Engine.BAND[cr.uncertainty],0,10)}–${Engine.clamp(raw+Engine.BAND[cr.uncertainty],0,10)}`:'';};inp.addEventListener('input',upd);upd();});
+  c.querySelector('#bk').onclick=()=>{D.step=2;renderEditor();};
+  c.querySelector('#nx').onclick=()=>{D.step=4;D.gut=null;renderEditor();};
+  return c;
+}
+function edResults(){
+  const D=App.D;const c=document.createElement('div');c.className='card';const opts=validOpts(),crit=validCrit();
+  if(opts.length<2||crit.length<1){c.innerHTML=`<div class="empty"><h2>Not enough to simulate</h2><p>Add ≥ 2 options and ≥ 1 criterion.</p></div><div class="footer-nav"><button class="btn" id="bk">← Back</button><span></span></div>`;c.querySelector('#bk').onclick=()=>{D.step=3;renderEditor();};return c;}
+  const dec={options:opts,criteria:crit,risk:D.risk};
+  Engine.seed(hashDec(dec));const sim=Engine.simulate(dec,D.trials);const dom=Engine.dominance(dec);const tor=Engine.tornado(dec,sim);
+  const lead=sim.byEV[0],pL=Math.round(lead.pBest*100);const gap=lead.pBest;
+  const conf=gap>=.85?'a confident call':gap>=.62?'a lean, not a lock':'genuinely too close to call';
+  const sc=v=>Math.round(v*100);const maxP90=Math.max(...sim.per.map(p=>p.p90),1e-4);
+  c.innerHTML=`<div class="winner"><p class="eyebrow">Best bet · ${D.trials.toLocaleString()} simulations</p><p class="wname">${esc(lead.name)}</p>
+    <p class="verdict">Wins <b>${pL}%</b> of simulated futures — ${conf}. Highest expected value (${sc(lead.mean)}/100).</p></div>
+    <div class="modelbar" id="mb"></div>
+    <div class="stitle">How often each wins · 80% range</div><div id="pb"></div>
+    <div class="stitle">What to research first · value of information</div><div id="ev"></div>
+    <div class="stitle">What it hinges on · weight sensitivity</div><div id="tor"></div>
+    <div id="ins"></div><div class="gut" id="gut"></div>
+    <div class="footer-nav"><button class="btn" id="bk">← Adjust</button>
+      <div style="display:flex;gap:8px"><button class="btn small" id="save">Save</button><button class="btn small primary" id="srv">Save &amp; run on server</button></div></div>`;
+  // model controls
+  const mb=c.querySelector('#mb');const rw=D.risk<-.33?'Risk-averse':D.risk>.33?'Risk-seeking':'Risk-neutral';
+  mb.innerHTML=`<div class="mb"><div class="top"><label>Risk attitude</label><span class="v" id="rv">${rw}</span></div><input type="range" min="-1" max="1" step="0.1" value="${D.risk}" id="rr"/></div>
+    <div class="mb"><div class="top"><label>Trials</label><span class="v" id="tv">${D.trials.toLocaleString()}</span></div><input type="range" min="0" max="2" step="1" value="${[2000,6000,20000].indexOf(D.trials)<0?1:[2000,6000,20000].indexOf(D.trials)}" id="tr"/></div>`;
+  const rr=mb.querySelector('#rr');rr.addEventListener('input',e=>{const v=+e.target.value;mb.querySelector('#rv').textContent=v<-.33?'Risk-averse':v>.33?'Risk-seeking':'Risk-neutral';});
+  rr.addEventListener('change',e=>{D.risk=+e.target.value;renderEditor();});
+  const tr=mb.querySelector('#tr');tr.addEventListener('input',e=>mb.querySelector('#tv').textContent=[2000,6000,20000][+e.target.value].toLocaleString());
+  tr.addEventListener('change',e=>{D.trials=[2000,6000,20000][+e.target.value];renderEditor();});
+  // pbars
+  const pb=c.querySelector('#pb');
+  sim.byEV.forEach((p,i)=>{const dominated=dom.some(d=>d.loserId===p.id);const row=document.createElement('div');row.className='pbar'+(i===0?' first':'');
+    row.innerHTML=`<div class="top"><span class="nm">${esc(p.name)}${dominated?' <span class="flip">dominated</span>':''}</span><span class="pb">${Math.round(p.pBest*100)}%</span><span class="ev">EV ${sc(p.mean)} · ${sc(p.p10)}–${sc(p.p90)}</span></div>
+      <div class="track"><span class="ci" style="left:${p.p10/maxP90*100}%;width:${Math.max(2,(p.p90-p.p10)/maxP90*100)}%"></span><span class="mean" style="left:${p.mean/maxP90*100}%"></span></div>`;
+    pb.appendChild(row);});
+  // EVPPI on demand
+  const ev=c.querySelector('#ev');ev.innerHTML=`<button class="btn small" id="rev">Compute value of information</button><p class="hint">A nested simulation (~1s): which unknown to resolve before committing.</p>`;
+  c.querySelector('#rev').onclick=()=>{const b=c.querySelector('#rev');b.innerHTML='<span class="spin"></span>Simulating…';b.disabled=true;setTimeout(()=>{
+    Engine.seed((hashDec(dec)^0x9e3779b9)>>>0);const res=Engine.evppi(dec,160,160).sort((a,b)=>b.value-a.value);const mx=Math.max(...res.map(r=>r.value),1e-9);ev.innerHTML='';
+    res.forEach(r=>{const row=document.createElement('div');row.className='evrow';row.innerHTML=`<div class="lab">${esc(r.name)}</div><div class="meter"><span style="width:0%"></span></div><div class="val">${(r.value*100).toFixed(1)}</div>`;ev.appendChild(row);requestAnimationFrame(()=>row.querySelector('.meter>span').style.width=Math.max(2,r.value/mx*100)+'%');});
+    const top=res[0],note=document.createElement('p');note.className='hint';
+    note.innerHTML=top.value*100<.4?`Every unknown is nearly worthless to resolve — the decision is <b>robust to what you don't know</b>.`:`<b>Resolve “${esc(top.name)}” first.</b> It carries the most decision-relevant uncertainty (total value of perfect foresight ≈ ${(sim.evpi*100).toFixed(1)}).`;ev.appendChild(note);
+  },30);};
+  // tornado
+  const tb=c.querySelector('#tor');const mxs=Math.max(...tor.map(t=>t.swing),1e-9);
+  tor.forEach(t=>{const row=document.createElement('div');row.className='torrow';row.innerHTML=`<div class="lab">${esc(t.name)}</div><div class="meter"><span style="width:0%"></span></div><div class="val">${t.flips?'<span class="flip">can flip!</span>':''}</div>`;tb.appendChild(row);requestAnimationFrame(()=>row.querySelector('.meter>span').style.width=Math.max(2,t.swing/mxs*100)+'%');});
+  // insights
+  const ins=c.querySelector('#ins');
+  if(dom.length){const names=[...new Set(dom.map(d=>d.loser))];ins.appendChild(insight('bad','✕','You can drop '+(names.length>1?'options':'an option'),`<b>${names.map(esc).join(', ')}</b> ${names.length>1?'are':'is'} beaten on every criterion — eliminate and simplify.`));}
+  if(gap<.62)ins.appendChild(insight('teal','≈',"It's honestly close",`${esc(lead.name)} only wins ${pL}% of the time — treating this as settled would be overconfident.`));
+  else ins.appendChild(insight('gold','★','Why it wins',`${esc(lead.name)} leads on expected value and holds up across ${pL}% of outcomes.`));
+  renderGut(c.querySelector('#gut'),lead);
+  c.querySelector('#bk').onclick=()=>{D.step=3;renderEditor();};
+  c.querySelector('#save').onclick=async(e)=>{const b=e.target;b.disabled=true;b.textContent='Saving…';try{await saveDecision(D);toast('Saved to your account.');}catch(err){toast('Save failed: '+(err.message||''));}finally{b.disabled=false;b.textContent='Save';}};
+  c.querySelector('#srv').onclick=async(e)=>{const b=e.target;b.disabled=true;b.innerHTML='<span class="spin"></span>Running…';try{await saveDecision(D);const out=await runOnServer(D);const sp=out?.result?.perOption?.[0];toast(sp?('Server agrees: '+sp.name+' '+Math.round(sp.pBest*100)+'%'):'Saved & simulated on server.');}catch(err){toast('Server run failed: '+(err.message||''));}finally{b.disabled=false;b.textContent='Save & run on server';}};
+  return c;
+}
+function insight(cls,icon,title,body){const d=document.createElement('div');d.className='insight';d.innerHTML=`<div class="ic ${cls}">${icon}</div><div><h4>${title}</h4><p>${body}</p></div>`;return d;}
+function renderGut(el,lead){const D=App.D;
+  if(!D.gut){el.innerHTML=`<h4>Model vs. intuition</h4><p>The simulation points to <b>${esc(lead.name)}</b>. Does that match your gut?</p><div class="choices"><button class="btn small primary" id="gy">Yes — and now I know why</button><button class="btn small" id="gn">No — I expected different</button></div>`;
+    el.querySelector('#gy').onclick=()=>{D.gut='y';renderGut(el,lead);};el.querySelector('#gn').onclick=()=>{D.gut='n';renderGut(el,lead);};}
+  else if(D.gut==='y')el.innerHTML=`<h4>Then commit.</h4><p>Numbers and instinct agree — the strongest signal you get.</p>`;
+  else{el.innerHTML=`<h4>That disagreement is data.</h4><p>The model is probably missing a criterion or mis-weighting one. Go encode what your gut knows, then simulate again.</p><div class="choices"><button class="btn small" id="ge">← Revisit criteria</button></div>`;el.querySelector('#ge').onclick=()=>{D.step=2;renderEditor();};}
+}
+
+/* ============================ chrome ============================ */
+function renderUserbox(){
+  const u=$('#userbox');
+  if(App.session){u.innerHTML=`<span>${esc(App.session.user.email||'signed in')}</span> <button class="btn small ghost" id="out">Sign out</button>`;
+    u.querySelector('#out').onclick=async()=>{await sb.auth.signOut();};}
+  else u.innerHTML='';
+}
+$('#brand').onclick=()=>{if(App.session)showDashboard();};
+
+/* ============================ boot ============================ */
+sb.auth.onAuthStateChange((_e,session)=>{
+  const had=!!App.session;App.session=session;renderUserbox();
+  if(session&&!had)showDashboard();
+  if(!session){App.view='auth';$('#main').innerHTML='';$('#main').appendChild(viewAuth());}
+});
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();App.session=session;renderUserbox();
+  if(session)showDashboard();else{$('#main').innerHTML='';$('#main').appendChild(viewAuth());}
+})();
+</script>
+</body>
+</html>

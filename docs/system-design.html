@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crossroads — Backend System Design</title>
+<style>
+  :root{
+    --bg:#f4f2ed;--surface:#fff;--surface-2:#faf9f6;--ink:#1b1b29;--muted:#6b6b7b;--line:#e6e3db;
+    --indigo:#5b4bdb;--indigo-soft:#ece9fc;--indigo-ink:#3a2fb0;--teal:#0d8f8f;--teal-soft:#dcefef;--teal-ink:#0a6a6a;
+    --amber:#c98a13;--amber-soft:#fbf1d8;--amber-ink:#8a5e08;--green:#2f9e6b;--green-soft:#e7f4ee;--red:#d1604a;--red-soft:#fbeeeb;--slate:#64748b;
+    --shadow:0 1px 2px rgba(27,27,41,.04),0 8px 30px rgba(27,27,41,.07);--radius:15px;--mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:940px;margin:0 auto;padding:32px 22px 90px}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .logo{width:44px;height:44px;flex:none}
+  .brand h1{margin:0;font-size:23px;letter-spacing:-.02em;font-weight:700}
+  .brand .tag{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+  .meta{text-align:right;font-size:12px;color:var(--muted);line-height:1.7}
+  .meta b{color:var(--ink)}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--green-soft);color:#1f6e4a}
+  h2.sec{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--indigo-ink);font-weight:800;margin:34px 0 6px}
+  h2.sec .n{color:var(--muted)}
+  h3{font-size:17px;margin:20px 0 6px;letter-spacing:-.01em}
+  p{margin:9px 0}
+  .lead{font-size:15px;color:#3a3a48}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--indigo-ink)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin:14px 0}
+  .callout{border-left:3px solid var(--indigo);background:var(--surface);border-radius:0 12px 12px 0;padding:14px 18px;margin:14px 0;box-shadow:var(--shadow)}
+  .callout.teal{border-color:var(--teal)}.callout.amber{border-color:var(--amber)}
+  .callout h4{margin:0 0 5px;font-size:14px}
+  .callout p{margin:0;font-size:13.5px;color:#4a4a58}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700;background:var(--surface-2)}
+  td code{font-size:11.5px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .req{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .req h4{margin:0 0 8px;font-size:13.5px;display:flex;align-items:center;gap:8px}
+  .req ul{margin:0;padding-left:17px}.req li{font-size:12.8px;color:#454553;margin-bottom:4px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}.d-indigo{background:var(--indigo)}.d-teal{background:var(--teal)}.d-amber{background:var(--amber)}.d-slate{background:var(--slate)}
+  .diagram{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin:14px 0;overflow-x:auto}
+  .tier{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+  .node{border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:var(--surface-2);min-width:120px;text-align:center;font-size:12.5px}
+  .node .t{font-weight:700;font-size:12.5px}
+  .node .s{font-size:11px;color:var(--muted);margin-top:2px}
+  .node.client{background:var(--indigo-soft);border-color:#cdc6f3}
+  .node.edge{background:var(--teal-soft);border-color:#bfe0e0}
+  .node.data{background:#eef1f5;border-color:#d4dbe4}
+  .node.ext{background:var(--amber-soft);border-color:#ecd9a6}
+  .flowlbl{text-align:center;color:var(--muted);font-size:18px;margin:2px 0}
+  .erd{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:760px){.erd{grid-template-columns:1fr 1fr}}
+  .ent{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface);box-shadow:0 1px 2px rgba(27,27,41,.04)}
+  .ent .h{background:var(--indigo);color:#fff;font-weight:700;font-size:12.5px;padding:6px 10px}
+  .ent.t-team .h{background:var(--teal)}.ent.t-growth .h{background:var(--amber)}
+  .ent .b{padding:8px 10px;font-size:11.3px;color:#454553;font-family:var(--mono);line-height:1.55}
+  .ent .b .k{color:var(--indigo-ink);font-weight:700}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0}
+  .legend span{display:flex;align-items:center;gap:6px}
+  pre{background:#1d1c2b;color:#e8e6f5;border-radius:11px;padding:14px 16px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.55;margin:12px 0}
+  pre .c{color:#8b88b3}pre .k{color:#c9b6ff}pre .s{color:#9be6c4}
+  .tradeoff td:first-child{font-weight:600}
+  .chip{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:20px;margin-right:4px}
+  .c-ok{background:var(--green-soft);color:#1f6e4a}.c-warn{background:var(--amber-soft);color:var(--amber-ink)}.c-info{background:var(--indigo-soft);color:var(--indigo-ink)}
+  ul.clean{margin:9px 0;padding-left:18px}ul.clean li{margin-bottom:6px;font-size:13.5px}
+  .toc{columns:2;column-gap:30px;font-size:13px;margin:6px 0}
+  .toc a{color:var(--indigo-ink);text-decoration:none}.toc a:hover{text-decoration:underline}
+  @media(max-width:600px){.toc{columns:1}}
+  @media print{body{background:#fff}.card,.diagram,.callout,.req,.ent{box-shadow:none}pre{background:#f2f1ee;color:#1b1b29;border:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="11" fill="url(#g)"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#5b4bdb"/><stop offset="1" stop-color="#0d8f8f"/></linearGradient></defs>
+        <path d="M24 9v11m0 0l-9 9m9-9l9 9" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="9.5" r="3.3" fill="#fff"/><circle cx="14" cy="30" r="3.3" fill="#cfe9e6"/><circle cx="34" cy="30" r="3.3" fill="#cfe9e6"/>
+      </svg>
+      <div><h1>Crossroads — Backend System Design</h1><p class="tag">From a single-file app to a multi-tenant, team-ready decision platform on Supabase</p></div>
+    </div>
+    <div class="meta"><span class="pill">BUILT &amp; DEPLOYED</span><br>Project <b>rgbgstcipidkrcjofins</b><br>Postgres 17 · us-west-2<br>14 tables · 1 edge function<br>v1.0 · Jun 16 2026</div>
+  </div>
+
+  <p class="lead">This document captures the architecture for taking Crossroads from a client-only prototype to a product that supports accounts, saved decisions, real-time team decision-making, server-side reproducible simulation, generated reports, and a paid tier. The schema, security policies, and compute service described here are <b>live in the connected Supabase project</b> — this is both the design and a record of what was built.</p>
+
+  <div class="toc">
+    <a href="#req">1 · Requirements</a><br>
+    <a href="#arch">2 · Architecture overview</a><br>
+    <a href="#compute">3 · The compute split</a><br>
+    <a href="#data">4 · Data model</a><br>
+    <a href="#rls">5 · Access control &amp; security</a><br>
+    <a href="#api">6 · API contracts</a><br>
+    <a href="#team">7 · Deep dive — team decisions</a><br>
+    <a href="#voi">8 · Deep dive — value of information at scale</a><br>
+    <a href="#scale">9 · Scale &amp; reliability</a><br>
+    <a href="#trade">10 · Trade-offs</a><br>
+    <a href="#built">11 · What was built</a><br>
+    <a href="#revisit">12 · What I'd revisit</a>
+  </div>
+
+  <h2 class="sec" id="req"><span class="n">01</span> &nbsp;Requirements</h2>
+  <div class="grid2">
+    <div class="req"><h4><span class="dot d-indigo"></span>Functional</h4><ul>
+      <li>Accounts; private decisions that persist and sync across devices.</li>
+      <li>Each decision = options + criteria (weight, uncertainty) + per-participant scores.</li>
+      <li>Run the Monte-Carlo engine and store reproducible results (P(best), EVPI, dominance, tornado, EVPPI).</li>
+      <li>Teams: multiple stakeholders score independently; surface where they disagree.</li>
+      <li>Template gallery; generated decision-record reports; outcome journal for calibration.</li>
+      <li>Free / Pro / Team billing tiers.</li>
+    </ul></div>
+    <div class="req"><h4><span class="dot d-teal"></span>Non-functional</h4><ul>
+      <li><b>Scale from day one</b>: design for 100k+ users, no single-tenant assumptions.</li>
+      <li>Interactive sim feedback &lt; 100 ms (client); authoritative sim &lt; ~2 s (server).</li>
+      <li>Hard multi-tenant isolation — a user can never read another's decision.</li>
+      <li>Reproducibility: identical inputs ⇒ identical result (seeded Monte Carlo).</li>
+      <li>Real-time collaboration latency &lt; 1 s for co-editing a team decision.</li>
+      <li>Reads cheap and cacheable; heavy compute isolated so it can't stall the API.</li>
+    </ul></div>
+  </div>
+  <div class="callout"><h4>Constraints</h4><p>Small team, cost-sensitive until revenue, Supabase as the platform (Postgres + Auth + RLS + Realtime + Edge Functions + Storage). Favor managed primitives over bespoke infrastructure; keep the verified TypeScript engine as the single source of truth for the math on both client and server.</p></div>
+
+  <h2 class="sec" id="arch"><span class="n">02</span> &nbsp;Architecture overview</h2>
+  <div class="diagram">
+    <div class="tier">
+      <div class="node client"><div class="t">Web / mobile client</div><div class="s">Simple &amp; Pro modes · client engine</div></div>
+    </div>
+    <div class="flowlbl">▲ &nbsp; HTTPS · JWT · Realtime WS &nbsp; ▼</div>
+    <div class="tier">
+      <div class="node data"><div class="t">Auth (GoTrue)</div><div class="s">JWT, OAuth, magic link</div></div>
+      <div class="node data"><div class="t">PostgREST</div><div class="s">auto REST · RLS-enforced</div></div>
+      <div class="node data"><div class="t">Realtime</div><div class="s">row changes → WS</div></div>
+      <div class="node edge"><div class="t">Edge Functions</div><div class="s">simulate-decision (live)</div></div>
+      <div class="node data"><div class="t">Storage</div><div class="s">report PDFs</div></div>
+    </div>
+    <div class="flowlbl">▼</div>
+    <div class="tier">
+      <div class="node data" style="min-width:280px"><div class="t">Postgres 17 — single source of truth</div><div class="s">14 tables · Row Level Security on every one · pgmq (planned queue)</div></div>
+    </div>
+    <div class="flowlbl">▼ &nbsp; outbound</div>
+    <div class="tier">
+      <div class="node ext"><div class="t">Stripe</div><div class="s">billing webhooks</div></div>
+      <div class="node ext"><div class="t">Email / Resend</div><div class="s">invites, review nudges</div></div>
+      <div class="node ext"><div class="t">Notion / Slack</div><div class="s">share &amp; embed (later)</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot d-indigo"></span>Client</span>
+      <span><span class="dot d-teal"></span>Edge compute</span>
+      <span><span class="dot" style="background:#aab4c2"></span>Supabase managed</span>
+      <span><span class="dot d-amber"></span>Third-party</span>
+    </div>
+  </div>
+  <p>The client talks to four Supabase surfaces: <b>Auth</b> for identity, <b>PostgREST</b> for all CRUD (every request filtered by Row Level Security, so the database itself is the authorization boundary), <b>Realtime</b> for live team collaboration, and <b>Edge Functions</b> for authoritative compute and report generation. There is no bespoke application server — Postgres + RLS <em>is</em> the backend, which is what keeps a small team able to operate at scale.</p>
+
+  <h2 class="sec" id="compute"><span class="n">03</span> &nbsp;The compute split (the key decision)</h2>
+  <p>The engine is identical TypeScript on both sides; <b>where</b> it runs depends on what the run is for.</p>
+  <table>
+    <thead><tr><th>Run type</th><th>Where</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Live "what-if" while dragging a weight slider</td><td><span class="chip c-info">Client</span></td><td>Instant (&lt;100 ms), free, fully private. No round-trip, no cost, works offline.</td></tr>
+      <tr><td>The decision's authoritative result</td><td><span class="chip c-ok">Edge fn</span></td><td>Reproducible &amp; seeded, stored in <code>simulations</code>, citable in a report, identical for every viewer.</td></tr>
+      <tr><td>Group / consensus run across participants</td><td><span class="chip c-ok">Edge fn</span></td><td>Needs every participant's inputs — the server already has them under RLS; avoids trusting one client.</td></tr>
+      <tr><td>Report / decision-record generation</td><td><span class="chip c-ok">Edge fn</span></td><td>Server owns the canonical numbers and writes the PDF to Storage.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout teal"><h4>Reproducibility by construction</h4><p>Both engines seed a <code>mulberry32</code> PRNG from an FNV-1a hash of the decision inputs, so the same decision always yields the same P(best), intervals, and EVPPI — no flicker on refresh, and a stored result can be re-derived and audited. The server port was verified against the client engine: identical headline on the reference case (leader 52%, EVPI 2.72, top information-value factor = "Growth").</p></div>
+  <h3>Why synchronous now, queued later</h3>
+  <p>A standard run (6k trials) and even nested-Monte-Carlo EVPPI (120×120) complete well inside an Edge Function's budget, so <code>simulate-decision</code> computes inline and inserts a finished <code>simulations</code> row in one call. The escape hatch for very large runs is already modeled: a <code>queued → running → done</code> status column and the <code>pgmq</code> queue extension let heavy jobs move to a worker without changing the data contract.</p>
+
+  <h2 class="sec" id="data"><span class="n">04</span> &nbsp;Data model</h2>
+  <p>The pivotal modeling choice is that <b>weights and scores are per-participant, not per-decision</b>. A solo decision is just the single-participant case; a team decision reuses the exact same tables. That one decision is what makes group decisions, disagreement-surfacing, and "decide as yourself then compare" fall out naturally instead of needing a separate system.</p>
+  <div class="diagram">
+    <div class="erd">
+      <div class="ent t-team"><div class="h">profiles</div><div class="b"><span class="k">id</span> → auth.users<br>display_name, avatar</div></div>
+      <div class="ent t-team"><div class="h">teams</div><div class="b"><span class="k">id</span>, owner_id<br>name, slug</div></div>
+      <div class="ent t-team"><div class="h">team_members</div><div class="b"><span class="k">team_id, user_id</span><br>role (admin/member)</div></div>
+      <div class="ent"><div class="h">decisions</div><div class="b"><span class="k">id</span>, owner_id, team_id?<br>title, mode, risk, trials<br>visibility, status</div></div>
+      <div class="ent"><div class="h">options</div><div class="b"><span class="k">id</span>, decision_id<br>name, position</div></div>
+      <div class="ent"><div class="h">criteria</div><div class="b"><span class="k">id</span>, decision_id<br>name, uncertainty<br>default_weight</div></div>
+      <div class="ent"><div class="h">decision_participants</div><div class="b"><span class="k">id</span>, decision_id<br>user_id?, role<br>invite_email, status</div></div>
+      <div class="ent"><div class="h">input_weights</div><div class="b"><span class="k">participant_id, criterion_id</span><br>weight 0–100</div></div>
+      <div class="ent"><div class="h">input_scores</div><div class="b"><span class="k">participant, option, criterion</span><br>likely 0–10</div></div>
+      <div class="ent"><div class="h">simulations</div><div class="b"><span class="k">id</span>, decision_id<br>seed, trials, status<br>result jsonb</div></div>
+      <div class="ent"><div class="h">decision_records</div><div class="b"><span class="k">id</span>, decision_id<br>simulation_id<br>storage_path</div></div>
+      <div class="ent t-growth"><div class="h">templates</div><div class="b"><span class="k">id</span>, slug, payload<br>is_official, author_id</div></div>
+      <div class="ent t-growth"><div class="h">decision_outcomes</div><div class="b"><span class="k">decision_id</span><br>chosen_option, rating<br>review_due, reflection</div></div>
+      <div class="ent t-growth"><div class="h">subscriptions</div><div class="b">user_id ⊕ team_id<br>plan, stripe ids, seats</div></div>
+    </div>
+    <div class="legend">
+      <span><span class="dot d-teal"></span>Identity &amp; teams</span>
+      <span><span class="dot d-indigo"></span>Decision core &amp; compute</span>
+      <span><span class="dot d-amber"></span>Growth (templates, journal, billing)</span>
+    </div>
+  </div>
+  <ul class="clean">
+    <li><b>Scores are uncertainty, not points</b> — <code>criteria.uncertainty</code> (low/med/high → ±1/±2/±3) drives the triangular bands the engine samples, so the uncertainty that powers EVPPI lives in the schema.</li>
+    <li><b>Results are immutable snapshots</b> — a <code>simulations</code> row stores its <code>seed</code>, <code>trials</code>, <code>engine_version</code>, and a <code>result</code> JSONB blob, so a decision made last quarter can be reproduced and explained later.</li>
+    <li><b>Outcomes close the loop</b> — <code>decision_outcomes</code> records what was chosen, a <code>review_due</code> date, and how it turned out, feeding the calibration/decision-journal features.</li>
+    <li><b>Billing is polymorphic</b> — a subscription attaches to a user <em>or</em> a team (<code>check num_nonnulls(user_id, team_id) = 1</code>).</li>
+  </ul>
+
+  <h2 class="sec" id="rls"><span class="n">05</span> &nbsp;Access control &amp; security</h2>
+  <p>Authorization lives entirely in the database via Row Level Security — there is no app-server trust boundary to get wrong. Six <code>SECURITY DEFINER</code> helper functions answer the access questions, and policies call them:</p>
+  <pre><span class="c">-- the heart of multi-tenant isolation</span>
+can_read_decision(d) = owner OR team member OR named participant
+can_edit_decision(d) = owner OR team admin OR participant{owner|facilitator}
+owns_participant(p)  = the participant row belongs to auth.uid()</pre>
+  <ul class="clean">
+    <li><b>No recursion</b> — helpers are <code>SECURITY DEFINER</code> with <code>search_path = ''</code>, so a policy on <code>decisions</code> can query <code>decisions</code> without re-triggering its own policy (the classic Supabase RLS trap, avoided).</li>
+    <li><b>Separation of duties</b> — facilitators edit structure (options, criteria, roster); contributors may only write <em>their own</em> <code>input_weights</code>/<code>input_scores</code> (enforced by <code>owns_participant</code>), but can read everyone's to see the group picture.</li>
+    <li><b>Billing is read-only to clients</b> — <code>subscriptions</code> has a SELECT policy but no write policy; only the Stripe webhook (service role, which bypasses RLS) mutates it.</li>
+    <li><b>Hardened</b> — every table has RLS enabled; FK covering indexes added; <code>auth.uid()</code> wrapped in scalar sub-selects to evaluate once per query, not per row; helper <code>EXECUTE</code> revoked from <code>anon</code>.</li>
+  </ul>
+  <div class="callout amber"><h4>Known, accepted advisor items</h4><p>The six RLS helpers remain <code>EXECUTE</code>-able by <code>authenticated</code> — this is required for RLS to evaluate them, and they leak nothing (each returns only the caller's own boolean access). The textbook next step is relocating them to a non-API-exposed <code>private</code> schema. Separately, a pre-existing <code>public.rls_auto_enable()</code> function (not part of this build) is flagged and should be reviewed.</p></div>
+
+  <h2 class="sec" id="api"><span class="n">06</span> &nbsp;API contracts</h2>
+  <h3>Data plane — PostgREST (auto-generated, RLS-filtered)</h3>
+  <p>CRUD needs no hand-written endpoints. The client uses <code>supabase-js</code> with generated types; the database decides what's visible.</p>
+  <pre><span class="c">// load a decision the user is allowed to see — RLS does the filtering</span>
+<span class="k">const</span> { data } = <span class="k">await</span> supabase
+  .from(<span class="s">'decisions'</span>).select(<span class="s">'*, options(*), criteria(*), decision_participants(*)'</span>)
+  .eq(<span class="s">'id'</span>, decisionId).single()</pre>
+  <h3>Compute plane — <code>POST /functions/v1/simulate-decision</code></h3>
+  <table>
+    <thead><tr><th>Request field</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>decisionId</code></td><td>Assemble inputs from the DB under the caller's RLS, then persist the result.</td></tr>
+      <tr><td><code>payload</code></td><td>Alternatively, compute a supplied in-memory decision statelessly (no persistence).</td></tr>
+      <tr><td><code>aggregation</code></td><td><code>individual</code> · <code>mean</code> · <code>median</code> · <code>consensus</code> — how to combine participants.</td></tr>
+      <tr><td><code>participantId</code>, <code>trials</code>, <code>seed</code>, <code>computeEvppi</code></td><td>Scope, depth, reproducibility, and whether to run the (heavier) value-of-information pass.</td></tr>
+    </tbody>
+  </table>
+  <pre><span class="c">// response</span>
+{ simulationId, result: {
+    perOption:[{name, mean, p10, p50, p90, pBest}],
+    evpi, dominance:[{winner,loser}], tornado:[{name,swing,flips}],
+    evppi:[{name,value}],  <span class="c">// ranked: what to research first</span>
+    meta:{ aggregation, trials, seed, engineVersion } } }</pre>
+  <h3>Realtime — collaboration channels</h3>
+  <p><code>input_scores</code>, <code>input_weights</code>, <code>decision_participants</code>, and <code>simulations</code> are published to Realtime. A team decision subscribes to row changes scoped to its <code>decision_id</code>, so a teammate's score appears live and a finished simulation pushes to everyone.</p>
+
+  <h2 class="sec" id="team"><span class="n">07</span> &nbsp;Deep dive — team decisions &amp; disagreement</h2>
+  <p>Because inputs are per-participant, a team decision is a fan-in/fan-out over the same tables:</p>
+  <ol class="clean">
+    <li><b>Set up</b> — a facilitator defines options &amp; criteria and adds participants (existing users or email invites → <code>decision_participants</code>).</li>
+    <li><b>Independent input</b> — each participant writes only their own <code>input_weights</code>/<code>input_scores</code>; Realtime streams presence and progress without exposing who-said-what prematurely.</li>
+    <li><b>Aggregate</b> — <code>simulate-decision</code> with <code>aggregation = mean|median</code> reduces participants per (option, criterion) and per weight, then runs the standard engine.</li>
+    <li><b>Surface disagreement</b> — the spread of weights per criterion and scores per cell is the signal: high variance on a high-weight criterion is exactly where the team should talk. (This dovetails with EVPPI: "you disagree most on the thing that matters most — resolve it.")</li>
+  </ol>
+  <div class="callout"><h4>Why server-side aggregation</h4><p>No single client can be trusted to hold everyone's inputs, and RLS lets contributors read peers' inputs but not edit them. The Edge Function runs with the caller's JWT, so it can only aggregate a decision the caller is actually part of — authorization and computation share one boundary.</p></div>
+
+  <h2 class="sec" id="voi"><span class="n">08</span> &nbsp;Deep dive — value of information at scale</h2>
+  <p>EVPPI is the product's signature output and its most expensive computation: a nested Monte Carlo (outer × inner per criterion). Cost ≈ <code>M × K × options × criteria</code>. The plan keeps it cheap where it can and isolates it where it can't:</p>
+  <ul class="clean">
+    <li><b>Tiered depth</b> — the function caps nested work and skips EVPPI when <code>options × criteria</code> is large, so a pathological decision can't hang a request.</li>
+    <li><b>Cache by input hash</b> — results are deterministic, so the seed/hash doubles as a cache key; an unchanged decision never recomputes.</li>
+    <li><b>Offload path</b> — the <code>simulations</code> status machine + <code>pgmq</code> let a 50k-trial or many-participant run enqueue and complete on a worker, with Realtime notifying the client when <code>status = done</code>.</li>
+  </ul>
+
+  <h2 class="sec" id="scale"><span class="n">09</span> &nbsp;Scale &amp; reliability</h2>
+  <div class="grid2">
+    <div class="req"><h4><span class="dot d-indigo"></span>Where the load is</h4><ul>
+      <li>Reads dominate (open/list decisions) — cheap, indexed, RLS-filtered.</li>
+      <li>Writes are small and bounded (one user's scores).</li>
+      <li>CPU concentrates in simulation — deliberately pushed to stateless Edge Functions that scale horizontally and independently of the API.</li>
+    </ul></div>
+    <div class="req"><h4><span class="dot d-teal"></span>Scaling levers</h4><ul>
+      <li>Supavisor connection pooling for serverless fan-out.</li>
+      <li>Read replicas when read volume climbs.</li>
+      <li><code>pgmq</code> worker pool for heavy/most-expensive runs.</li>
+      <li>Partition <code>simulations</code> by month (<code>pg_partman</code>) once it's the largest table.</li>
+    </ul></div>
+  </div>
+  <table>
+    <thead><tr><th>Failure</th><th>Containment</th></tr></thead>
+    <tbody>
+      <tr><td>Edge Function timeout on a huge run</td><td>Caps + queue offload; partial failure writes <code>status = error</code>, never a corrupt result.</td></tr>
+      <tr><td>Stripe webhook lost</td><td>Idempotent upserts keyed on Stripe IDs; reconcile job re-syncs subscription state.</td></tr>
+      <tr><td>Bad client clock / refresh storms</td><td>Deterministic seeding means re-runs are free and identical — no thundering recompute.</td></tr>
+      <tr><td>Realtime drop</td><td>UI falls back to on-demand refetch; the DB remains source of truth.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec" id="trade"><span class="n">10</span> &nbsp;Trade-offs made explicit</h2>
+  <table class="tradeoff">
+    <thead><tr><th>Decision</th><th>Chose</th><th>Gave up</th></tr></thead>
+    <tbody>
+      <tr><td>Backend shape</td><td>Supabase BaaS — Postgres+RLS as the backend</td><td>Bespoke service flexibility; some vendor lock-in (mitigated: it's standard Postgres).</td></tr>
+      <tr><td>Authorization</td><td>In-database RLS</td><td>Policy SQL is harder to unit-test than app code; offset by advisors + the helper-function pattern.</td></tr>
+      <tr><td>Compute</td><td>Hybrid client/server, same engine</td><td>The engine is maintained in two runtimes (kept in sync by a shared, tested source).</td></tr>
+      <tr><td>Team inputs</td><td>Per-participant rows from day one</td><td>More tables &amp; joins than a single weights blob; buys teams, history, and disagreement for free.</td></tr>
+      <tr><td>Heavy sims</td><td>Synchronous now, queue-ready</td><td>Very large runs aren't yet offloaded — but the data contract won't change when they are.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 class="sec" id="built"><span class="n">11</span> &nbsp;What was actually built (live in the project)</h2>
+  <ul class="clean">
+    <li><b>8 migrations</b> → 14 tables, 9 enums, 6 RLS helper functions, new-user &amp; team-owner triggers, <code>updated_at</code> triggers.</li>
+    <li><b>RLS on all 14 tables</b> with read/write policies; FK covering indexes; per-query <code>auth.uid()</code>; <code>anon</code> execute revoked.</li>
+    <li><b>Edge Function <code>simulate-decision</code></b> (ACTIVE, JWT-verified) — full engine: simulate, dominance, tornado, nested-MC EVPPI; DB-assembly and stateless-payload modes.</li>
+    <li><b>4 official templates</b> seeded (job offer, hiring, vendor, where-to-live).</li>
+    <li><b>Realtime</b> enabled on the four collaboration tables; <b>TypeScript types</b> generated for the client.</li>
+    <li><b>Verified</b> — server engine reproduces the client headline exactly (leader 52%, EVPI 2.72, EVPPI top = Growth); security &amp; performance advisors run and remediated.</li>
+  </ul>
+
+  <h2 class="sec" id="revisit"><span class="n">12</span> &nbsp;What I'd revisit as it grows</h2>
+  <ul class="clean">
+    <li><b>Move RLS helpers to a <code>private</code> schema</b> to clear the residual advisor warnings entirely.</li>
+    <li><b>Promote the engine to a shared package</b> imported by both client and function, so the two ports can never drift.</li>
+    <li><b>Materialize team aggregates</b> (a per-decision rollup) once group decisions are common, to avoid re-reducing inputs on every run.</li>
+    <li><b>Link-sharing &amp; anonymous input</b> via signed tokens through an Edge Function (kept out of RLS deliberately for now).</li>
+    <li><b>Partition + archive</b> <code>simulations</code>, and add an EVPPI result cache table keyed by input hash.</li>
+    <li><b>Stripe webhook + report-render functions</b> are designed (status machine, Storage, polymorphic subscriptions) but not yet implemented — the next build.</li>
+  </ul>
+
+</div>
+</body>
+</html>

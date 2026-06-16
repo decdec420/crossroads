@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Crossroads — Product Roadmap (Now / Next / Later)</title>
+<style>
+  :root{
+    --bg:#f4f2ed;--surface:#fff;--surface-2:#faf9f6;--ink:#1b1b29;--muted:#6b6b7b;--line:#e6e3db;
+    --indigo:#5b4bdb;--indigo-soft:#ece9fc;--indigo-ink:#3a2fb0;
+    --teal:#0d8f8f;--teal-soft:#dcefef;--teal-ink:#0a6a6a;
+    --amber:#c98a13;--amber-soft:#fbf1d8;--amber-ink:#8a5e08;
+    --green:#2f9e6b;--green-soft:#e7f4ee;--red:#d1604a;--red-soft:#fbeeeb;--slate:#64748b;--slate-soft:#eef1f5;
+    --shadow:0 1px 2px rgba(27,27,41,.04),0 8px 30px rgba(27,27,41,.07);--radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 22px 80px}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .logo{width:42px;height:42px;flex:none}
+  .brand h1{margin:0;font-size:22px;letter-spacing:-.02em;font-weight:700}
+  .brand .tag{margin:1px 0 0;font-size:13px;color:var(--muted)}
+  .horizon{text-align:right;font-size:12.5px;color:var(--muted)}
+  .horizon b{display:block;font-size:14px;color:var(--ink);font-weight:700}
+  .northstar{background:linear-gradient(135deg,#241f4a,#3f34a0 60%,#0d6f7a);color:#fff;border-radius:var(--radius);padding:20px 24px;margin:18px 0 22px;box-shadow:var(--shadow)}
+  .northstar .lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;opacity:.82;font-weight:700;margin:0 0 5px}
+  .northstar p{margin:0;font-size:16.5px;font-weight:500;max-width:62ch}
+  .themes{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+  .theme{flex:1;min-width:215px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 15px;box-shadow:var(--shadow)}
+  .theme .t{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .theme .d{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .d-indigo{background:var(--indigo)}.d-teal{background:var(--teal)}.d-amber{background:var(--amber)}.d-slate{background:var(--slate)}
+
+  .statbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+  .stat{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+  .stat .n{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .stat .l{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
+  .stat.warn{background:var(--red-soft);border-color:#eccabf}
+  .stat.warn .n{font-size:14px;color:var(--red-ink,#a8412e);padding-top:5px}
+
+  h2.section{font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:30px 0 14px;border-top:1px solid var(--line);padding-top:18px}
+
+  .board{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:860px){.board{grid-template-columns:1fr}}
+  .col{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .col-head{display:flex;align-items:baseline;justify-content:space-between;margin:2px 4px 12px}
+  .col-head .ch{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px}
+  .col-head .cw{font-size:11.5px;color:var(--muted);font-weight:600}
+  .col.now{border-top:3px solid var(--indigo)}
+  .col.next{border-top:3px solid var(--teal)}
+  .col.later{border-top:3px solid var(--amber)}
+
+  .item{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:11px;box-shadow:0 1px 2px rgba(27,27,41,.04)}
+  .item:last-child{margin-bottom:0}
+  .item h3{margin:0 0 4px;font-size:14.5px;letter-spacing:-.01em}
+  .item .desc{font-size:12.8px;color:#4a4a58;margin:0 0 10px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .chip{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .c-ship{background:var(--green-soft);color:#1f6e4a}
+  .c-prog{background:var(--indigo-soft);color:var(--indigo-ink)}
+  .c-plan{background:var(--slate-soft);color:#475569}
+  .c-expl{background:var(--amber-soft);color:var(--amber-ink)}
+  .c-risk{background:var(--red-soft);color:#a8412e}
+  .chip.owner{background:#f0eee9;color:#5a5648}
+  .chip.theme{background:transparent;border:1px solid var(--line);color:var(--muted)}
+  .chip.q-win{background:var(--green-soft);color:#1f6e4a}
+  .chip.q-bet{background:#efe8fb;color:var(--indigo-ink)}
+  .chip.q-fill{background:var(--slate-soft);color:#475569}
+  .dep{font-size:11.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:7px;margin-top:2px}
+  .dep b{color:#55525e;font-weight:700}
+
+  /* matrix */
+  .prio-wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+  @media(max-width:860px){.prio-wrap{grid-template-columns:1fr}}
+  .matrix-card,.rice-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+  .matrix-card h4,.rice-card h4{margin:0 0 3px;font-size:15px}
+  .matrix-card .sub,.rice-card .sub{margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+  .matrix{position:relative;height:320px;border:1px solid var(--line);border-radius:12px;background:
+     linear-gradient(var(--line),var(--line)) 50% 0/1px 100% no-repeat,
+     linear-gradient(var(--line),var(--line)) 0 50%/100% 1px no-repeat,var(--surface-2)}
+  .qlab{position:absolute;font-size:10.5px;font-weight:700;color:#a9a59a;text-transform:uppercase;letter-spacing:.04em}
+  .axis-x{position:absolute;bottom:-18px;width:100%;text-align:center;font-size:11px;color:var(--muted)}
+  .axis-y{position:absolute;left:-30px;top:50%;transform:rotate(-90deg);font-size:11px;color:var(--muted)}
+  .pt{position:absolute;width:22px;height:22px;border-radius:50%;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .pt.now{background:var(--indigo)}.pt.next{background:var(--teal)}.pt.later{background:var(--amber)}
+  .legend{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:3px 16px}
+  .legend div{font-size:11.5px;color:#4a4a58}
+  .legend .k{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;margin-right:6px;vertical-align:-3px}
+
+  table.rice{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.rice th,table.rice td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+  table.rice th:first-child,table.rice td:first-child{text-align:left}
+  table.rice thead th{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+  table.rice td.score{font-weight:800;color:var(--teal-ink)}
+  table.rice tr.top td{background:var(--teal-soft)}
+  .rice-note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.55}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.twocol{grid-template-columns:1fr}}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+  .panel h4{margin:0 0 12px;font-size:15px}
+  .risk{margin-bottom:12px}
+  .risk:last-child{margin-bottom:0}
+  .risk .rh{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px}
+  .sev{font-size:10px;font-weight:800;padding:1px 7px;border-radius:20px}
+  .sev.h{background:var(--red-soft);color:#a8412e}.sev.m{background:var(--amber-soft);color:var(--amber-ink)}
+  .risk p{margin:3px 0 0;font-size:12.3px;color:#4a4a58}
+  .deplist{list-style:none;margin:0;padding:0}
+  .deplist li{font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--line);color:#4a4a58}
+  .deplist li:last-child{border:none}
+  .deplist b{color:var(--ink)}
+  .arrow{color:var(--teal);font-weight:800}
+
+  .changes{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--indigo);border-radius:0 13px 13px 0;padding:15px 18px;box-shadow:var(--shadow)}
+  .changes h4{margin:0 0 8px;font-size:14px}
+  .changes ul{margin:0;padding-left:18px}
+  .changes li{font-size:12.8px;color:#4a4a58;margin-bottom:5px}
+  .capacity{font-size:12px;color:var(--muted);margin-top:22px;border-top:1px solid var(--line);padding-top:14px;line-height:1.6}
+  .capacity b{color:#55525e}
+  @media print{body{background:#fff}.wrap{padding:0}.matrix-card,.rice-card,.panel,.theme,.stat,.changes,.item,.col{box-shadow:none}.board{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="11" fill="url(#g)"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#5b4bdb"/><stop offset="1" stop-color="#0d8f8f"/></linearGradient></defs>
+        <path d="M24 9v11m0 0l-9 9m9-9l9 9" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="9.5" r="3.3" fill="#fff"/><circle cx="14" cy="30" r="3.3" fill="#cfe9e6"/><circle cx="34" cy="30" r="3.3" fill="#cfe9e6"/>
+      </svg>
+      <div><h1>Crossroads — Product Roadmap</h1><p class="tag">Now / Next / Later · the decision studio that takes uncertainty seriously</p></div>
+    </div>
+    <div class="horizon"><b>18-month horizon</b>Jun 2026 → Dec 2027<br>Updated Jun 15, 2026 · v1.0 baseline</div>
+  </div>
+
+  <div class="northstar">
+    <p class="lbl">North star</p>
+    <p>Help people make hard decisions they can stand behind — by quantifying uncertainty and telling them what to learn before they commit, instead of faking a confident answer.</p>
+  </div>
+
+  <div class="themes">
+    <div class="theme"><div class="t"><span class="dot d-slate"></span>Rigor is the moat</div><div class="d">The decision science nobody else ships well: uncertainty, value-of-information, calibration.</div></div>
+    <div class="theme"><div class="t"><span class="dot d-indigo"></span>Usable &amp; sticky</div><div class="d">Templates, persistence, onboarding, mobile — so people actually return.</div></div>
+    <div class="theme"><div class="t"><span class="dot d-teal"></span>Solo → shared</div><div class="d">From one person's call to a team's decision, with disagreement made visible.</div></div>
+    <div class="theme"><div class="t"><span class="dot d-amber"></span>Distribution</div><div class="d">Sharing, reports, integrations, and a Pro tier to make it a business.</div></div>
+  </div>
+
+  <div class="statbar">
+    <div class="stat"><div class="n">2</div><div class="l">Engines shipped</div></div>
+    <div class="stat"><div class="n">5</div><div class="l">Now</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">Next</div></div>
+    <div class="stat"><div class="n">6</div><div class="l">Later (bets)</div></div>
+    <div class="stat warn"><div class="n">Top risk: usability vs. rigor</div><div class="l">see risks</div></div>
+  </div>
+
+  <h2 class="section">The board</h2>
+  <div class="board">
+
+    <div class="col now">
+      <div class="col-head"><span class="ch"><span class="dot d-indigo"></span>Now</span><span class="cw">Q3 2026 · committed</span></div>
+
+      <div class="item">
+        <h3>Unify into one product, two modes</h3>
+        <p class="desc">Merge the simple scorer and the Monte-Carlo engine behind progressive disclosure: Simple mode by default, Pro/Research mode one click away.</p>
+        <div class="meta"><span class="chip c-prog">In progress</span><span class="chip owner">Eng + Design</span><span class="chip theme">Usable</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Foundation for:</b> calibration, sensitivity 2.0</div>
+      </div>
+      <div class="item">
+        <h3>Save &amp; revisit decisions</h3>
+        <p class="desc">A named library of decisions you can reopen and re-run — today it's share-link only and nothing persists.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Eng</span><span class="chip theme">Usable</span><span class="chip q-win">Quick win</span></div>
+        <div class="dep"><b>MoSCoW:</b> Must-have</div>
+      </div>
+      <div class="item">
+        <h3>Decision templates</h3>
+        <p class="desc">Starter setups (job offer, hire, vendor, where to live, build-vs-buy) to kill the blank-page problem.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">PM</span><span class="chip theme">Usable</span><span class="chip q-win">Quick win</span></div>
+        <div class="dep"><b>MoSCoW:</b> Must-have</div>
+      </div>
+      <div class="item">
+        <h3>Guided onboarding</h3>
+        <p class="desc">A walked-through first decision that teaches weighting and uncertainty without a manual.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Design</span><span class="chip theme">Usable</span><span class="chip q-win">Quick win</span></div>
+        <div class="dep"><b>MoSCoW:</b> Should-have</div>
+      </div>
+      <div class="item">
+        <h3>Mobile &amp; accessibility pass</h3>
+        <p class="desc">Responsive scoring grid, keyboard paths, screen-reader labels — table stakes before any growth push.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Eng + Design</span><span class="chip theme">Usable</span><span class="chip q-fill">Fill-in</span></div>
+        <div class="dep"><b>MoSCoW:</b> Should-have</div>
+      </div>
+    </div>
+
+    <div class="col next">
+      <div class="col-head"><span class="ch"><span class="dot d-teal"></span>Next</span><span class="cw">Q4 2026–Q1 2027 · planned</span></div>
+
+      <div class="item">
+        <h3>Decision record &amp; reports</h3>
+        <p class="desc">One-click shareable brief (PDF/HTML): the verdict, probabilities, what-to-research, and the reasoning. RICE's top scorer — pulled early.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Eng + PM</span><span class="chip theme">Distribution</span><span class="chip q-win">Quick win</span></div>
+        <div class="dep"><b>Enables:</b> monetization, virality</div>
+      </div>
+      <div class="item">
+        <h3>Calibration &amp; elicitation 2.0</h3>
+        <p class="desc">Replace ±1/2/3 with real 80% interval elicitation, plus a calibration trainer that corrects overconfidence over time.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Decision science</span><span class="chip theme">Rigor</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> unified engine (Now)</div>
+      </div>
+      <div class="item">
+        <h3>Sensitivity 2.0</h3>
+        <p class="desc">Tornado on the inputs themselves (not just weights) and a weight-space stability map showing how far you can move before the answer flips.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Decision science</span><span class="chip theme">Rigor</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> unified engine (Now)</div>
+      </div>
+      <div class="item">
+        <h3>Accounts &amp; cloud sync</h3>
+        <p class="desc">Decisions follow you across devices. The unlock for everything shared and paid.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">Eng</span><span class="chip theme">Solo→shared</span><span class="chip q-fill">Enabler</span></div>
+        <div class="dep"><b>Blocks:</b> team decisions, Pro tier</div>
+      </div>
+    </div>
+
+    <div class="col later">
+      <div class="col-head"><span class="ch"><span class="dot d-amber"></span>Later</span><span class="cw">Q2–Q4 2027 · directional</span></div>
+
+      <div class="item">
+        <h3>Team / group decisions</h3>
+        <p class="desc">Multiple stakeholders weight and score independently; the app surfaces <em>where</em> people most disagree. The expansion bet.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">PM + Eng</span><span class="chip theme">Solo→shared</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> accounts &amp; sync</div>
+      </div>
+      <div class="item">
+        <h3>Correlated criteria</h3>
+        <p class="desc">Model factors that move together in the simulation. High rigor payoff — but eliciting correlations from normal users is unsolved. Spike first.</p>
+        <div class="meta"><span class="chip c-expl">Exploring</span><span class="chip owner">Decision science</span><span class="chip theme">Rigor</span><span class="chip c-risk">UX risk</span></div>
+        <div class="dep"><b>RICE:</b> low confidence → research spike before commit</div>
+      </div>
+      <div class="item">
+        <h3>Advanced preferences</h3>
+        <p class="desc">Prospect-theory utility (loss aversion, reference points) and AHP pairwise weighting with a consistency check that catches incoherent preferences.</p>
+        <div class="meta"><span class="chip c-expl">Exploring</span><span class="chip owner">Decision science</span><span class="chip theme">Rigor</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> calibration 2.0 learnings</div>
+      </div>
+      <div class="item">
+        <h3>Templates gallery + integrations</h3>
+        <p class="desc">Community template gallery, embeds, and "decide together" hooks into Notion / Slack.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">PM</span><span class="chip theme">Distribution</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> reports, accounts</div>
+      </div>
+      <div class="item">
+        <h3>Pro tier (monetization)</h3>
+        <p class="desc">Cloud, teams, unlimited saved decisions, branded reports. The business model.</p>
+        <div class="meta"><span class="chip c-plan">Planned</span><span class="chip owner">PM</span><span class="chip theme">Distribution</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> accounts, teams, reports</div>
+      </div>
+      <div class="item">
+        <h3>Decision journal &amp; outcomes</h3>
+        <p class="desc">Log what you chose, revisit how it turned out, and feed that back into your personal calibration. The retention moat — and genuinely novel.</p>
+        <div class="meta"><span class="chip c-expl">Exploring</span><span class="chip owner">PM + Decision science</span><span class="chip theme">Rigor</span><span class="chip q-bet">Big bet</span></div>
+        <div class="dep"><b>Needs:</b> accounts, calibration 2.0</div>
+      </div>
+    </div>
+
+  </div>
+
+  <h2 class="section">Why this order — the prioritization blend</h2>
+  <div class="prio-wrap">
+    <div class="matrix-card">
+      <h4>Value vs. effort</h4>
+      <p class="sub">Triage lens for the whole set. Colour = bucket: <span style="color:var(--indigo);font-weight:700">Now</span> · <span style="color:var(--teal-ink);font-weight:700">Next</span> · <span style="color:var(--amber-ink);font-weight:700">Later</span>.</p>
+      <div class="matrix">
+        <span class="qlab" style="top:7px;left:9px">Quick wins</span>
+        <span class="qlab" style="top:7px;right:9px">Big bets</span>
+        <span class="qlab" style="bottom:7px;left:9px">Fill-ins</span>
+        <span class="qlab" style="bottom:7px;right:9px">Money pits</span>
+        <span class="pt now"  style="left:18%;top:18%" title="Save & revisit">1</span>
+        <span class="pt now"  style="left:29%;top:11%" title="Templates">2</span>
+        <span class="pt now"  style="left:47%;top:20%" title="Unify editions">3</span>
+        <span class="pt next" style="left:32%;top:30%" title="Decision record & reports">4</span>
+        <span class="pt next" style="left:62%;top:22%" title="Calibration 2.0">5</span>
+        <span class="pt next" style="left:72%;top:52%" title="Accounts & sync">6</span>
+        <span class="pt later" style="left:84%;top:21%" title="Team decisions">7</span>
+        <span class="pt later" style="left:81%;top:58%" title="Correlated criteria">8</span>
+        <span class="pt later" style="left:75%;top:31%" title="Pro tier">9</span>
+        <span class="axis-x">Effort →</span><span class="axis-y">Value →</span>
+      </div>
+      <div class="legend">
+        <div><span class="k pt-now" style="background:var(--indigo)">1</span>Save &amp; revisit</div>
+        <div><span class="k" style="background:var(--teal)">5</span>Calibration 2.0</div>
+        <div><span class="k" style="background:var(--indigo)">2</span>Templates</div>
+        <div><span class="k" style="background:var(--teal)">6</span>Accounts &amp; sync</div>
+        <div><span class="k" style="background:var(--indigo)">3</span>Unify editions</div>
+        <div><span class="k" style="background:var(--amber)">7</span>Team decisions</div>
+        <div><span class="k" style="background:var(--teal)">4</span>Decision record</div>
+        <div><span class="k" style="background:var(--amber)">8</span>Correlated criteria</div>
+        <div><span class="k" style="background:var(--amber)">9</span>Pro tier</div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="rice-card">
+      <h4>RICE — the contested mid-term items</h4>
+      <p class="sub">Tie-breaker for what lands first in <b>Next</b>. Score = (Reach × Impact × Confidence) ÷ Effort.</p>
+      <table class="rice">
+        <thead><tr><th>Initiative</th><th>Reach</th><th>Imp</th><th>Conf</th><th>Eff</th><th>RICE</th></tr></thead>
+        <tbody>
+          <tr class="top"><td>Decision record &amp; reports</td><td>5.0k</td><td>1</td><td>90%</td><td>1.5</td><td class="score">3000</td></tr>
+          <tr><td>Calibration &amp; elicitation 2.0</td><td>4.0k</td><td>2</td><td>80%</td><td>3</td><td class="score">2133</td></tr>
+          <tr><td>Accounts &amp; cloud sync</td><td>6.0k</td><td>1</td><td>100%</td><td>4</td><td class="score">1500</td></tr>
+          <tr><td>Sensitivity 2.0</td><td>3.0k</td><td>1</td><td>90%</td><td>2</td><td class="score">1350</td></tr>
+          <tr><td>Correlated criteria</td><td>1.5k</td><td>2</td><td>50%</td><td>5</td><td class="score">300</td></tr>
+        </tbody>
+      </table>
+      <p class="rice-note">The math earned its keep: <b>Reports</b> scored highest (high reach, low effort) so it leads Next rather than waiting behind the rigor work. <b>Correlated criteria</b> scored 10× lower — low confidence, heavy effort — which is why it drops to Later as a spike, not a commitment. <b>MoSCoW</b> then locks the Now bucket (templates, save, unify = Must) and <b>Value/Effort</b> keeps the big bets honest about cost.</p>
+    </div>
+  </div>
+
+  <h2 class="section">Risks &amp; dependencies</h2>
+  <div class="twocol">
+    <div class="panel">
+      <h4>Top risks</h4>
+      <div class="risk"><div class="rh"><span class="sev h">HIGH</span>Usability vs. rigor</div><p>The Research Edition is powerful but can intimidate. If "Pro mode" leaks complexity into the default path, casual users bounce. Mitigation: Simple-by-default, templates, onboarding (all in Now).</p></div>
+      <div class="risk"><div class="rh"><span class="sev m">MED-HI</span>Eliciting correlations</div><p>Asking lay users for a correlation matrix is unrealistic. Mitigation: spike a simplified "these factors move together" toggle before committing engineering.</p></div>
+      <div class="risk"><div class="rh"><span class="sev m">MED</span>Elicitation friction</div><p>Ranges and uncertainty are extra work per estimate. Mitigation: smart defaults from confidence, templates pre-filled, calibration 2.0.</p></div>
+      <div class="risk"><div class="rh"><span class="sev m">MED</span>Capacity vs. ambition</div><p>18 months is tight for a small team. Later is deliberately directional. Protect a 70/20/10 split and apply the "what comes off?" rule before adding anything.</p></div>
+    </div>
+    <div class="panel">
+      <h4>Critical dependency chain</h4>
+      <ul class="deplist">
+        <li><b>Unify editions</b> <span class="arrow">→</span> Calibration 2.0, Sensitivity 2.0 <span style="color:var(--muted)">(engine must be one codebase first)</span></li>
+        <li><b>Accounts &amp; sync</b> <span class="arrow">→</span> Team decisions <span class="arrow">→</span> Pro tier <span style="color:var(--muted)">(the whole monetization line)</span></li>
+        <li><b>Decision record / reports</b> <span class="arrow">→</span> Pro tier, integrations <span style="color:var(--muted)">(shareable artifact drives growth + paid value)</span></li>
+        <li><b>Calibration 2.0</b> <span class="arrow">→</span> Decision journal <span style="color:var(--muted)">(outcomes feed personal calibration)</span></li>
+        <li><b>Correlated criteria</b> + <b>advanced preferences</b> <span style="color:var(--muted)">— highest technical risk; gate on a research spike</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="section">Changes this update</h2>
+  <div class="changes">
+    <h4>v1.0 — initial baseline</h4>
+    <ul>
+      <li>Consolidated the two shipped prototypes (simple scorer + Monte-Carlo engine) into a single product strategy with a Simple/Pro split.</li>
+      <li>Pulled <b>Decision record &amp; reports</b> forward into early Next — RICE flagged it as a near-quick-win (3000, the top score).</li>
+      <li>Moved the PhD+ features (<b>correlated criteria</b>, <b>prospect theory</b>, <b>AHP</b>) from "next engineering work" to <b>Later</b> as bets pending a research spike — low RICE confidence didn't justify committing.</li>
+      <li>Sequenced <b>accounts &amp; sync</b> ahead of the team/monetization line, since it blocks everything shared and paid.</li>
+    </ul>
+  </div>
+
+  <p class="capacity"><b>Capacity note.</b> Roadmap is zero-sum against the team. Target allocation: <b>70%</b> roadmap features · <b>20%</b> technical health (the unified engine pays this down) · <b>10%</b> buffer. Now and Next are commitments; Later is a set of directional bets, not dated promises. Before anything new enters Now, something moves out — that's the discipline this plan runs on.</p>
+
+</div>
+</body>
+</html>

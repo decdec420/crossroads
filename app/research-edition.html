@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Crossroads · Research Edition — decisions under uncertainty</title>
+<style>
+  :root{
+    --bg:#f4f2ed; --surface:#fff; --surface-2:#faf9f6; --ink:#1b1b29; --muted:#6b6b7b;
+    --line:#e6e3db; --accent:#5b4bdb; --accent-soft:#ece9fc; --accent-ink:#3a2fb0;
+    --gold:#c98a13; --gold-soft:#fbf1d8; --good:#2f9e6b; --good-soft:#e7f4ee; --bad:#d1604a; --bad-soft:#fbeeeb;
+    --teal:#0d8f8f; --shadow:0 1px 2px rgba(27,27,41,.04),0 8px 30px rgba(27,27,41,.08); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:26px 20px 90px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;flex:none}
+  .brand h1{font-size:21px;margin:0;letter-spacing:-.02em;font-weight:700;display:flex;align-items:center;gap:9px}
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#5b4bdb,#0d8f8f);padding:3px 8px;border-radius:6px}
+  .brand p{margin:1px 0 0;font-size:13px;color:var(--muted)}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .stepper{display:flex;gap:6px;margin-bottom:20px}
+  .stepper .step{flex:1;display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-size:13.5px;color:var(--muted);cursor:pointer;transition:.15s;min-width:0}
+  .stepper .step:hover{border-color:#d4d0c5}
+  .stepper .step .num{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);font-size:12px;font-weight:700;color:var(--muted)}
+  .stepper .step .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .stepper .step.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .stepper .step.active .num{background:rgba(255,255,255,.22);border-color:transparent;color:#fff}
+  .stepper .step.done .num{background:var(--accent-soft);border-color:transparent;color:var(--accent-ink)}
+  @media(max-width:680px){.stepper .step .lbl{display:none}.stepper .step{justify-content:center}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px}
+  .card h2{margin:0 0 4px;font-size:20px;letter-spacing:-.015em}
+  .card .sub{margin:0 0 22px;color:var(--muted);font-size:14.5px}
+  label.field{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:7px}
+  input[type=text]{width:100%;padding:12px 14px;font-size:15.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:11px;font-family:inherit;transition:.15s}
+  input[type=text]:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  input::placeholder{color:#adaa9f}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .row .grip{color:#c7c3b8;font-size:18px;flex:none;user-select:none}
+  .row input[type=text]{flex:1}
+  .icon-btn{flex:none;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:17px;line-height:1;display:grid;place-items:center;transition:.15s}
+  .icon-btn:hover{color:var(--bad);border-color:#e7c4bc;background:#fdf3f0}
+  .add-btn{margin-top:4px;padding:11px 15px;border-radius:11px;border:1.5px dashed #d3cfc4;background:transparent;color:var(--accent-ink);font-weight:600;font-size:14px;cursor:pointer;width:100%;font-family:inherit;transition:.15s}
+  .add-btn:hover{background:var(--accent-soft);border-color:var(--accent)}
+  .btn{font-family:inherit;font-size:14.5px;font-weight:600;padding:12px 20px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:.15s}
+  .btn:hover{border-color:#cfcbbf;background:var(--surface-2)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#4e3fce}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  .btn.ghost:hover{color:var(--ink);background:var(--surface-2)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.small{padding:8px 13px;font-size:13px}
+  .footer-nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:12px}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:14px}
+  .pill-note{display:inline-block;background:var(--accent-soft);color:var(--accent-ink);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
+
+  /* criteria step */
+  .crit{padding:16px;border:1px solid var(--line);border-radius:13px;margin-bottom:14px;background:var(--surface-2)}
+  .crit .row{margin-bottom:14px}
+  .crit .controls{display:flex;gap:22px;flex-wrap:wrap}
+  .ctl{flex:1;min-width:180px}
+  .ctl .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .ctl .ctl-name{font-weight:600;font-size:13.5px}
+  .ctl .ctl-val{font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);padding:2px 9px;border-radius:20px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;background:var(--line);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(91,75,219,.45)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff}
+  .seg{display:flex;gap:5px}
+  .seg button{flex:1;padding:7px 4px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+  .seg button.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  /* estimate grid */
+  .egrid{overflow-x:auto}
+  table.est{border-collapse:collapse;width:100%;min-width:520px}
+  table.est th,table.est td{padding:10px;border-bottom:1px solid var(--line);text-align:center}
+  table.est th.lead,table.est td.lead{text-align:left;font-weight:600}
+  table.est thead th{font-size:13px;color:var(--ink);background:var(--surface-2)}
+  table.est thead th small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+  table.est td .num-in{width:64px;padding:8px;text-align:center;font-size:15px;font-weight:600;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:inherit}
+  table.est td .num-in:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  table.est td .band{font-size:10.5px;color:var(--muted);margin-top:3px}
+  .crit-unc-tag{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);margin-left:6px}
+
+  /* results */
+  .winner-banner{background:linear-gradient(135deg,#241f4a,#3f34a0 55%,#0d6f7a);color:#fff;border-radius:var(--radius);padding:24px 26px;margin-bottom:18px;position:relative;overflow:hidden}
+  .winner-banner .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.82;margin:0 0 6px;font-weight:600}
+  .winner-banner .wname{font-size:27px;font-weight:700;margin:0;letter-spacing:-.02em}
+  .winner-banner .verdict{margin:12px 0 0;font-size:14.5px;opacity:.95;max-width:92%}
+  .winner-banner .spark{position:absolute;right:-26px;top:-26px;width:150px;height:150px;opacity:.14}
+
+  .section-title{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:22px 0 12px}
+  .pbar-row{margin-bottom:16px}
+  .pbar-top{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
+  .pbar-top .nm{font-weight:600;font-size:15px;flex:1}
+  .pbar-top .pb{font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+  .pbar-top .ev{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .track{position:relative;height:30px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .track .ci{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(91,75,219,.10),rgba(91,75,219,.10) 6px,rgba(91,75,219,.18) 6px,rgba(91,75,219,.18) 12px);border-left:1px solid rgba(91,75,219,.35);border-right:1px solid rgba(91,75,219,.35)}
+  .track .mean{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--accent);border-radius:2px}
+  .pbar-row.first .track .ci{background:repeating-linear-gradient(45deg,rgba(201,138,19,.12),rgba(201,138,19,.12) 6px,rgba(201,138,19,.22) 6px,rgba(201,138,19,.22) 12px);border-color:rgba(201,138,19,.4)}
+  .pbar-row.first .track .mean{background:var(--gold)}
+  .axis{display:flex;justify-content:space-between;font-size:11px;color:#a9a59a;margin-top:4px}
+
+  .insight{display:flex;gap:13px;padding:16px;border-radius:13px;background:var(--surface-2);border:1px solid var(--line);margin-top:12px}
+  .insight .ic{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;font-size:17px;background:var(--accent-soft)}
+  .insight .ic.gold{background:var(--gold-soft)}.insight .ic.good{background:var(--good-soft)}.insight .ic.bad{background:var(--bad-soft)}.insight .ic.teal{background:#dff1f1}
+  .insight h4{margin:0 0 3px;font-size:14px}
+  .insight p{margin:0;font-size:13.5px;color:#4a4a58}
+  .insight strong{color:var(--ink)}
+
+  /* EVPI / tornado */
+  .evpi-row,.tor-row{display:grid;grid-template-columns:150px 1fr 58px;gap:12px;align-items:center;margin-bottom:9px}
+  .evpi-row .lab,.tor-row .lab{font-size:13.5px;font-weight:600;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meter{height:22px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .meter>span{display:block;height:100%;border-radius:6px;transition:width .6s cubic-bezier(.2,.7,.2,1)}
+  .evpi-row .meter>span{background:linear-gradient(90deg,#16a085,#0d8f8f)}
+  .tor-row .meter{position:relative;background:var(--surface-2)}
+  .tor-row .meter>span{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,#7a6ce8,#5b4bdb)}
+  .evpi-row .val,.tor-row .val{font-size:12.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;text-align:left}
+  .flip-flag{font-size:11px;color:var(--bad);font-weight:600}
+
+  .modelbar{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2);margin-bottom:18px}
+  .modelbar .mb{flex:1;min-width:190px}
+  .modelbar .mb .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .modelbar .mb label{font-size:12.5px;font-weight:700;color:var(--muted)}
+  .modelbar .mb .v{font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-soft);padding:2px 9px;border-radius:20px}
+  .gut{margin-top:18px;padding:18px;border-radius:13px;border:1px dashed #cfcbbf;background:#fff}
+  .gut h4{margin:0 0 4px;font-size:15px}.gut p{margin:0 0 13px;font-size:13.5px;color:var(--muted)}
+  .gut .choices{display:flex;gap:9px;flex-wrap:wrap}
+  details.method{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  details.method summary{cursor:pointer;font-size:13px;color:var(--accent-ink);font-weight:600}
+  details.method p{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .empty{text-align:center;color:var(--muted);padding:30px 10px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:11px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media print{.stepper,.top-actions,.footer-nav,.modelbar,.gut .choices,.add-btn{display:none!important}body{background:#fff}.card{box-shadow:none;border:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="48" height="48" rx="11" fill="url(#g)"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#5b4bdb"/><stop offset="1" stop-color="#0d8f8f"/></linearGradient></defs>
+        <path d="M24 9v11m0 0l-9 9m9-9l9 9" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="9.5" r="3.3" fill="#fff"/><circle cx="14" cy="30" r="3.3" fill="#cfe9e6"/><circle cx="34" cy="30" r="3.3" fill="#cfe9e6"/>
+      </svg>
+      <div>
+        <h1>Crossroads <span class="badge">Research Edition</span></h1>
+        <p>Decisions under uncertainty — simulated, not guessed.</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn small ghost" id="btn-example">Try an example</button>
+      <button class="btn small ghost" id="btn-reset">Reset</button>
+    </div>
+  </header>
+  <nav class="stepper" id="stepper"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ===================================================================== */
+/* ==ENGINE START== (pure, RNG-swappable, unit-tested separately)         */
+/* ===================================================================== */
+const Engine = {
+  rng: Math.random,
+  seed(n){ // mulberry32 deterministic PRNG for reproducibility/testing
+    let a = n >>> 0;
+    this.rng = function(){
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  },
+  BAND: { low: 1, med: 2, high: 3 },           // ± band on a 0–10 scale by stated uncertainty
+  clamp(x,a,b){ return x<a?a : x>b?b : x; },
+
+  // Triangular sample via inverse-CDF. Mean = (lo+ml+hi)/3.
+  triangular(lo, ml, hi){
+    if (hi <= lo) return lo;
+    ml = this.clamp(ml, lo, hi);
+    const u = this.rng(), c = (ml - lo) / (hi - lo);
+    if (u < c) return lo + Math.sqrt(u * (hi - lo) * (ml - lo));
+    return hi - Math.sqrt((1 - u) * (hi - lo) * (hi - ml));
+  },
+
+  // Exponential (constant absolute risk aversion) utility on p in [0,1] -> [0,1].
+  // risk<0 = risk-averse (concave); risk>0 = risk-seeking (convex); 0 = linear.
+  utility(p, risk){
+    p = this.clamp(p, 0, 1);
+    const a = -risk * 3.5;
+    if (Math.abs(a) < 1e-6) return p;
+    return (1 - Math.exp(-a * p)) / (1 - Math.exp(-a));
+  },
+
+  band(c){ return this.BAND[c.uncertainty] || 2; },
+  loOf(c,o){ return this.clamp((c.cells[o.id]||0) - this.band(c), 0, 10); },
+  hiOf(c,o){ return this.clamp((c.cells[o.id]||0) + this.band(c), 0, 10); },
+  normWeights(crit){
+    const t = crit.reduce((s,c)=>s + (c.weight||0), 0) || 1;
+    return crit.map(c => (c.weight||0)/t);
+  },
+
+  // One Monte Carlo trial -> value per option (array aligned to dec.options).
+  trial(dec, W){
+    return dec.options.map(o=>{
+      let v = 0;
+      dec.criteria.forEach((c,ci)=>{
+        const x = this.triangular(this.loOf(c,o), c.cells[o.id]||0, this.hiOf(c,o));
+        v += W[ci] * this.utility(x/10, dec.risk);
+      });
+      return v;
+    });
+  },
+
+  // Full simulation. Returns per-option stats + EVPI + win probabilities.
+  simulate(dec, N){
+    const W = this.normWeights(dec.criteria);
+    const O = dec.options.length;
+    const vals = Array.from({length:O}, ()=>[]);
+    const wins = new Array(O).fill(0);
+    // meanU[oi][ci] = expected utility contribution (for tornado/flip), pre-weight
+    const meanU = Array.from({length:O}, ()=> new Array(dec.criteria.length).fill(0));
+    let sumMaxPerfect = 0;
+    for (let t=0;t<N;t++){
+      const tv = new Array(O).fill(0);
+      let best = -Infinity, bi = 0;
+      dec.options.forEach((o,oi)=>{
+        let v=0;
+        dec.criteria.forEach((c,ci)=>{
+          const u = this.utility(this.triangular(this.loOf(c,o), c.cells[o.id]||0, this.hiOf(c,o))/10, dec.risk);
+          meanU[oi][ci] += u;
+          v += W[ci]*u;
+        });
+        tv[oi]=v; vals[oi].push(v);
+        if (v>best){ best=v; bi=oi; }
+      });
+      wins[bi]++;
+      sumMaxPerfect += best;
+    }
+    const per = dec.options.map((o,oi)=>{
+      const arr = vals[oi].slice().sort((a,b)=>a-b);
+      const q = p => arr[Math.min(arr.length-1, Math.floor(p*arr.length))];
+      const mean = arr.reduce((s,x)=>s+x,0)/arr.length;
+      return { id:o.id, name:o.name, mean, p10:q(0.10), p50:q(0.50), p90:q(0.90), pBest:wins[oi]/N };
+    });
+    for (let oi=0;oi<O;oi++) for (let ci=0;ci<dec.criteria.length;ci++) meanU[oi][ci]/=N;
+    const baseline = Math.max(...per.map(p=>p.mean));
+    const evpi = Math.max(0, sumMaxPerfect/N - baseline);
+    const byEV = per.slice().sort((a,b)=>b.mean-a.mean);
+    return { per, byEV, evpi, baseline, W, meanU };
+  },
+
+  // Deterministic dominance on the 'likely' estimates: A dominates B if A>=B on
+  // every criterion and strictly greater on at least one. Weight-free truth.
+  dominance(dec){
+    const out = [];
+    dec.options.forEach(a=>{
+      dec.options.forEach(b=>{
+        if (a.id===b.id) return;
+        let ge=true, gt=false;
+        dec.criteria.forEach(c=>{
+          const av=c.cells[a.id]||0, bv=c.cells[b.id]||0;
+          if (av < bv) ge=false;
+          if (av > bv) gt=true;
+        });
+        if (ge && gt) out.push({ winner:a.name, loser:b.name, loserId:b.id });
+      });
+    });
+    return out;
+  },
+
+  // Tornado on weights: swing each criterion's weight from 0 to 2x current,
+  // measure how the leader's margin over the best rival moves. Uses meanU (exact).
+  tornado(dec, sim){
+    const crit = dec.criteria, O = dec.options.length;
+    const leaderIdx = dec.options.findIndex(o=>o.id===sim.byEV[0].id);
+    const evWith = (rawW)=>{
+      const t = rawW.reduce((s,x)=>s+x,0)||1;
+      const w = rawW.map(x=>x/t);
+      const ev = dec.options.map((o,oi)=> w.reduce((s,_,ci)=> s + w[ci]*sim.meanU[oi][ci], 0));
+      const lead = ev[leaderIdx];
+      let bestRival=-Infinity; ev.forEach((e,oi)=>{ if(oi!==leaderIdx && e>bestRival) bestRival=e; });
+      return lead - bestRival;
+    };
+    const base = crit.map(c=>c.weight||0);
+    const rows = crit.map((c,ci)=>{
+      const lo = base.slice(); lo[ci]=0;
+      const hi = base.slice(); hi[ci]=(base[ci]||0.0001)*2;
+      const mLo = evWith(lo), mHi = evWith(hi);
+      const swing = Math.abs(mHi - mLo);
+      const flips = (mLo<0) !== (mHi<0);   // leader margin crosses zero -> winner changes
+      return { name:c.name, swing, flips, lo:Math.min(mLo,mHi), hi:Math.max(mLo,mHi) };
+    });
+    rows.sort((a,b)=>b.swing-a.swing);
+    return rows;
+  },
+
+  // EVPPI via nested Monte Carlo: value of learning ONE criterion before deciding.
+  // Outer: sample criterion c (all options) = "the truth about c is revealed".
+  // Inner: average over all other criteria -> best decision given that truth.
+  evppi(dec, M, K){
+    const W = this.normWeights(dec.criteria), crit = dec.criteria, opts = dec.options;
+    // baseline: decide-now expected value
+    const meanV = opts.map(()=>0);
+    const Kb = Math.max(K, 200);
+    for (let k=0;k<Kb;k++) opts.forEach((o,oi)=>{
+      let v=0; crit.forEach((c,ci)=> v += W[ci]*this.utility(this.triangular(this.loOf(c,o), c.cells[o.id]||0, this.hiOf(c,o))/10, dec.risk));
+      meanV[oi]+=v;
+    });
+    for (let oi=0;oi<opts.length;oi++) meanV[oi]/=Kb;
+    const baseline = Math.max(...meanV);
+
+    return crit.map((cTarget,cti)=>{
+      let outerMax = 0;
+      for (let m=0;m<M;m++){
+        // reveal criterion cTarget for every option
+        const fixedU = opts.map(o=> this.utility(this.triangular(this.loOf(cTarget,o), cTarget.cells[o.id]||0, this.hiOf(cTarget,o))/10, dec.risk));
+        const inner = opts.map(()=>0);
+        for (let k=0;k<K;k++){
+          opts.forEach((o,oi)=>{
+            let v = W[cti]*fixedU[oi];
+            crit.forEach((c,ci)=>{ if(ci!==cti) v += W[ci]*this.utility(this.triangular(this.loOf(c,o), c.cells[o.id]||0, this.hiOf(c,o))/10, dec.risk); });
+            inner[oi]+=v;
+          });
+        }
+        let mx=-Infinity; inner.forEach(s=>{ const e=s/K; if(e>mx) mx=e; });
+        outerMax += mx;
+      }
+      return { name:cTarget.name, value:Math.max(0, outerMax/M - baseline) };
+    });
+  }
+};
+/* ===================================================================== */
+/* ==ENGINE END==                                                        */
+/* ===================================================================== */
+
+/* ---------------- App state ---------------- */
+let uid=1; const nid=()=>"id"+(uid++);
+function blank(){
+  return {
+    step:1, title:"",
+    options:[{id:nid(),name:""},{id:nid(),name:""}],
+    criteria:[{id:nid(),name:"",weight:50,uncertainty:"med",cells:{}}],
+    risk:0, trials:6000
+  };
+}
+let S = blank();
+const STEPS=[{n:1,label:"Frame"},{n:2,label:"Criteria"},{n:3,label:"Estimates"},{n:4,label:"Simulate"}];
+const $=(s,e=document)=>e.querySelector(s);
+const esc=s=>(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const validOpts=()=>S.options.filter(o=>o.name.trim());
+const validCrit=()=>S.criteria.filter(c=>c.name.trim());
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),2300);}
+
+/* ---------------- Render ---------------- */
+function render(){
+  renderStepper();
+  const m=$("#main"); m.innerHTML="";
+  m.appendChild(S.step===1?viewFrame():S.step===2?viewCriteria():S.step===3?viewEstimates():viewResults());
+}
+function renderStepper(){
+  const el=$("#stepper"); el.innerHTML="";
+  STEPS.forEach(st=>{
+    const b=document.createElement("button");
+    b.className="step"+(S.step===st.n?" active":"")+(S.step>st.n?" done":"");
+    b.innerHTML=`<span class="num">${S.step>st.n?"✓":st.n}</span><span class="lbl">${st.label}</span>`;
+    b.onclick=()=>{ if(st.n<S.step||canAdvance(S.step)){S.step=st.n;render();} };
+    el.appendChild(b);
+  });
+}
+function canAdvance(f){
+  if(f===1) return S.title.trim()&&validOpts().length>=2;
+  if(f===2) return validCrit().length>=1;
+  return true;
+}
+
+/* Step 1 */
+function viewFrame(){
+  const c=document.createElement("div"); c.className="card";
+  c.innerHTML=`<h2>What are you deciding?</h2>
+    <p class="sub">Name the decision and the options. The model will treat every later estimate as uncertain — so be liberal here.</p>
+    <label class="field">The decision</label>
+    <input type="text" id="title" placeholder="e.g. Which job offer should I take?" value="${esc(S.title)}"/>
+    <div style="height:22px"></div>
+    <label class="field">Options</label><div id="opts"></div>
+    <button class="add-btn" id="addopt">+ Add an option</button>
+    <div class="footer-nav"><span class="hint">${validOpts().length} option(s) — need ≥ 2.</span>
+    <button class="btn primary" id="n1">Next: criteria →</button></div>`;
+  c.querySelector("#title").addEventListener("input",e=>S.title=e.target.value);
+  const ob=c.querySelector("#opts"); S.options.forEach((o,i)=>ob.appendChild(optRow(o,i)));
+  c.querySelector("#addopt").onclick=()=>{S.options.push({id:nid(),name:""});render();};
+  c.querySelector("#n1").onclick=()=>{ if(!S.title.trim())return toast("Name the decision first.");
+    if(validOpts().length<2)return toast("Add at least two options."); S.step=2;render(); };
+  return c;
+}
+function optRow(o,i){
+  const r=document.createElement("div"); r.className="row";
+  r.innerHTML=`<span class="grip">⋮⋮</span><input type="text" placeholder="Option ${i+1}" value="${esc(o.name)}"/><button class="icon-btn">✕</button>`;
+  r.querySelector("input").addEventListener("input",e=>o.name=e.target.value);
+  r.querySelector(".icon-btn").onclick=()=>{ if(S.options.length<=2)return toast("Need ≥ 2 options.");
+    S.options=S.options.filter(x=>x.id!==o.id); S.criteria.forEach(c=>delete c.cells[o.id]); render(); };
+  return r;
+}
+
+/* Step 2 — criteria, weights (swing points), uncertainty */
+function viewCriteria(){
+  const c=document.createElement("div"); c.className="card";
+  c.innerHTML=`<h2>What matters — and how sure are you?</h2>
+    <p class="sub">For each criterion set its <strong>weight</strong> (how much swinging it from worst to best matters) and your <strong>confidence</strong> in the scores you'll give. Uncertainty is a first-class input here — it drives what's worth researching.</p>
+    <div id="crits"></div>
+    <button class="add-btn" id="addc">+ Add a criterion</button>
+    <div class="footer-nav"><button class="btn" id="b2">← Back</button><button class="btn primary" id="n2">Next: estimates →</button></div>`;
+  const box=c.querySelector("#crits"); S.criteria.forEach((cr,i)=>box.appendChild(critRow(cr,i)));
+  c.querySelector("#addc").onclick=()=>{S.criteria.push({id:nid(),name:"",weight:50,uncertainty:"med",cells:{}});render();};
+  c.querySelector("#b2").onclick=()=>{S.step=1;render();};
+  c.querySelector("#n2").onclick=()=>{ if(validCrit().length<1)return toast("Add at least one criterion."); S.step=3;render(); };
+  return c;
+}
+const UNC={low:"Confident",med:"Somewhat unsure",high:"Very unsure"};
+function critRow(cr,i){
+  const r=document.createElement("div"); r.className="crit";
+  r.innerHTML=`<div class="row"><input type="text" placeholder="Criterion ${i+1} — e.g. Compensation, Growth, Commute" value="${esc(cr.name)}"/><button class="icon-btn">✕</button></div>
+    <div class="controls">
+      <div class="ctl"><div class="top"><span class="ctl-name">Weight</span><span class="ctl-val wv">${cr.weight}</span></div>
+        <input type="range" min="0" max="100" step="5" value="${cr.weight}" class="wr"/></div>
+      <div class="ctl"><div class="top"><span class="ctl-name">Confidence in scores</span><span class="ctl-val uv">${UNC[cr.uncertainty]}</span></div>
+        <div class="seg">
+          <button data-u="low" class="${cr.uncertainty==='low'?'sel':''}">Confident<br>±1</button>
+          <button data-u="med" class="${cr.uncertainty==='med'?'sel':''}">Unsure<br>±2</button>
+          <button data-u="high" class="${cr.uncertainty==='high'?'sel':''}">Very unsure<br>±3</button>
+        </div></div>
+    </div>`;
+  r.querySelector("input[type=text]").addEventListener("input",e=>cr.name=e.target.value);
+  const wr=r.querySelector(".wr"), wv=r.querySelector(".wv");
+  wr.addEventListener("input",e=>{cr.weight=+e.target.value;wv.textContent=cr.weight;});
+  r.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{ cr.uncertainty=b.dataset.u;
+    r.querySelectorAll(".seg button").forEach(x=>x.classList.remove("sel")); b.classList.add("sel");
+    r.querySelector(".uv").textContent=UNC[cr.uncertainty]; });
+  r.querySelector(".icon-btn").onclick=()=>{ if(S.criteria.length<=1)return toast("Keep ≥ 1 criterion.");
+    S.criteria=S.criteria.filter(x=>x.id!==cr.id); render(); };
+  return r;
+}
+
+/* Step 3 — estimates grid (0–10 'likely' per option per criterion) */
+function viewEstimates(){
+  const c=document.createElement("div"); c.className="card";
+  const opts=validOpts(), crit=validCrit();
+  let head=`<thead><tr><th class="lead">Criterion</th>`;
+  opts.forEach(o=>head+=`<th>${esc(o.name)}<small>score 0–10</small></th>`); head+=`</tr></thead>`;
+  let body=`<tbody>`;
+  crit.forEach(cr=>{
+    body+=`<tr><td class="lead">${esc(cr.name)}<span class="crit-unc-tag">${UNC[cr.uncertainty]} · ±${Engine.BAND[cr.uncertainty]}</span></td>`;
+    opts.forEach(o=>{
+      const v = (cr.cells[o.id]!==undefined)?cr.cells[o.id]:"";
+      body+=`<td><input class="num-in" type="number" min="0" max="10" step="0.5" data-c="${cr.id}" data-o="${o.id}" value="${v}"/><div class="band" data-band="${cr.id}-${o.id}"></div></td>`;
+    });
+    body+=`</tr>`;
+  });
+  body+=`</tbody>`;
+  c.innerHTML=`<h2>Score each option (0 = poor, 10 = excellent)</h2>
+    <p class="sub">Give your best single guess. Each score is automatically widened into a range using the confidence you set, then simulated thousands of times.</p>
+    <div class="egrid"><table class="est">${head}${body}</table></div>
+    <div class="footer-nav"><button class="btn" id="b3">← Back</button><button class="btn primary" id="n3">Run the simulation →</button></div>`;
+  c.querySelectorAll(".num-in").forEach(inp=>{
+    const upd=()=>{ const cr=S.criteria.find(x=>x.id===inp.dataset.c); const o=inp.dataset.o;
+      const raw=inp.value===""?undefined:Engine.clamp(parseFloat(inp.value)||0,0,10);
+      if(raw===undefined) delete cr.cells[o]; else cr.cells[o]=raw;
+      const bd=c.querySelector(`[data-band="${inp.dataset.c}-${o}"]`);
+      if(bd&&raw!==undefined){const b=Engine.BAND[cr.uncertainty];bd.textContent=`${Engine.clamp(raw-b,0,10)}–${Engine.clamp(raw+b,0,10)}`;}
+      else if(bd) bd.textContent="";
+    };
+    inp.addEventListener("input",upd); upd();
+  });
+  c.querySelector("#b3").onclick=()=>{S.step=2;render();};
+  c.querySelector("#n3").onclick=()=>{S.step=4;S.gut=null;render();};
+  return c;
+}
+
+/* Step 4 — results */
+// Reproducible Monte Carlo: identical inputs -> identical output (no flicker on re-render).
+function hashDec(dec){
+  const str=JSON.stringify({o:dec.options.map(o=>o.name),
+    c:dec.criteria.map(c=>[c.name,c.weight,c.uncertainty,dec.options.map(o=>c.cells[o.id])]), r:dec.risk});
+  let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
+  return h>>>0;
+}
+function viewResults(){
+  const c=document.createElement("div"); c.className="card";
+  const opts=validOpts(), crit=validCrit();
+  if(opts.length<2||crit.length<1){
+    c.innerHTML=`<div class="empty"><h2>Not enough to simulate</h2><p>Add ≥ 2 options and ≥ 1 criterion.</p></div>
+      <div class="footer-nav"><button class="btn" id="b4">← Back</button><span></span></div>`;
+    c.querySelector("#b4").onclick=()=>{S.step=3;render();}; return c;
+  }
+  const dec={options:opts,criteria:crit,risk:S.risk};
+  Engine.seed(hashDec(dec));
+  const sim=Engine.simulate(dec,S.trials);
+  const dom=Engine.dominance(dec);
+  const tor=Engine.tornado(dec,sim);
+  const lead=sim.byEV[0], second=sim.byEV[1];
+  const pLead=Math.round(lead.pBest*100);
+  let conf,confWord;
+  if(lead.pBest>=0.85){conf="a confident call";confWord="confident";}
+  else if(lead.pBest>=0.62){conf="a lean, not a lock";confWord="leaning";}
+  else{conf="genuinely too close to call";confWord="a toss-up";}
+  // scale to 0..1 utility -> show as 0..100 "score"
+  const sc=v=>Math.round(v*100);
+  const maxP90=Math.max(...sim.per.map(p=>p.p90),0.0001);
+
+  c.innerHTML=`
+    <div class="winner-banner">
+      <svg class="spark" viewBox="0 0 100 100" fill="none"><path d="M50 5v40m0 0L20 75m30-30l30 30" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+      <p class="eyebrow">Best bet — across ${S.trials.toLocaleString()} simulations</p>
+      <p class="wname">${esc(lead.name)}</p>
+      <p class="verdict">It comes out on top in <strong>${pLead}%</strong> of simulated futures — ${conf}. Highest expected value (${sc(lead.mean)}/100) once your uncertainty is taken seriously.</p>
+    </div>
+
+    <div class="modelbar" id="modelbar"></div>
+
+    <div class="section-title">How often each option wins, and how wide the range is</div>
+    <div id="pbars"></div>
+    <p class="hint">Solid line = expected score. Shaded band = 80% range (10th–90th percentile) across simulations. Wider band = more riding on uncertain estimates.</p>
+
+    <div class="section-title">What to find out first &nbsp;·&nbsp; value of information</div>
+    <div id="evpi"></div>
+
+    <div class="section-title">What the answer hinges on &nbsp;·&nbsp; weight sensitivity</div>
+    <div id="tornado"></div>
+
+    <div id="insights"></div>
+    <div class="gut" id="gut"></div>
+
+    <details class="method"><summary>Methodology — how this is computed</summary>
+      <p><strong>Uncertainty:</strong> each 0–10 score is widened to a triangular distribution using your stated confidence (±1/±2/±3), then mapped through an exponential <em>utility</em> function set by your risk attitude. <strong>Simulation:</strong> ${S.trials.toLocaleString()} Monte Carlo trials draw every estimate independently; we record each option's score distribution and how often it wins (P(best)). <strong>Dominance:</strong> options worse on every criterion are flagged as eliminable regardless of weights. <strong>Value of information (EVPPI):</strong> a nested Monte Carlo estimates how much better you'd decide if you could learn one criterion's true value first — i.e. what's worth researching. <strong>Sensitivity:</strong> a tornado swings each weight from 0 to 2× to see what could flip the leader. This is multi-criteria decision analysis under uncertainty — the same machinery used in real decision science.</p>
+    </details>
+
+    <div class="footer-nav"><button class="btn" id="b4">← Adjust</button>
+      <div style="display:flex;gap:8px"><button class="btn small" id="print">Print / Save PDF</button></div></div>`;
+
+  // model controls (risk + trials) with live recompute
+  buildModelbar(c.querySelector("#modelbar"));
+
+  // probability bars
+  const pb=c.querySelector("#pbars");
+  sim.byEV.forEach((p,i)=>{
+    const dominated = dom.some(d=>d.loserId===p.id);
+    const row=document.createElement("div"); row.className="pbar-row"+(i===0?" first":"");
+    row.innerHTML=`<div class="pbar-top"><span class="nm">${esc(p.name)}${dominated?' <span class="crit-unc-tag" style="color:var(--bad);border-color:#e7c4bc">dominated</span>':''}</span>
+      <span class="pb">${Math.round(p.pBest*100)}%</span><span class="ev">EV ${sc(p.mean)} · range ${sc(p.p10)}–${sc(p.p90)}</span></div>
+      <div class="track">
+        <span class="ci" style="left:${p.p10/maxP90*100}%;width:${Math.max(2,(p.p90-p.p10)/maxP90*100)}%"></span>
+        <span class="mean" style="left:${p.mean/maxP90*100}%"></span>
+      </div>
+      <div class="axis"><span>0</span><span>score (utility ×100)</span><span>${sc(maxP90)}</span></div>`;
+    pb.appendChild(row);
+  });
+
+  // EVPI panel (compute on demand — nested MC is the heavy part)
+  const ev=c.querySelector("#evpi");
+  ev.innerHTML=`<button class="btn small" id="runevpi">Compute value of information</button>
+    <p class="hint" id="evpinote">A nested simulation (~1s): ranks which unknown, if resolved before you commit, would most improve your decision.</p>`;
+  c.querySelector("#runevpi").onclick=()=>{
+    const btn=c.querySelector("#runevpi"); btn.innerHTML=`<span class="spin"></span>Simulating…`; btn.disabled=true;
+    setTimeout(()=>{
+      Engine.seed((hashDec(dec)^0x9e3779b9)>>>0);
+      const res=Engine.evppi(dec,200,200).sort((a,b)=>b.value-a.value);
+      const maxV=Math.max(...res.map(r=>r.value),1e-9);
+      const totalEVPI=sim.evpi;
+      ev.innerHTML="";
+      res.forEach(r=>{
+        const row=document.createElement("div"); row.className="evpi-row";
+        const pct=r.value/maxV*100;
+        row.innerHTML=`<div class="lab">${esc(r.name)}</div><div class="meter"><span style="width:0%"></span></div><div class="val">${(r.value*100).toFixed(1)}</div>`;
+        ev.appendChild(row); requestAnimationFrame(()=>row.querySelector(".meter>span").style.width=Math.max(2,pct)+"%");
+      });
+      const top=res[0];
+      const note=document.createElement("p"); note.className="hint";
+      if(top.value*100<0.4){ note.innerHTML=`Every unknown is nearly worthless to resolve — your decision is <strong>robust to what you don't know</strong>. Stop researching and decide.`; }
+      else{ note.innerHTML=`<strong>Resolve “${esc(top.name)}” first.</strong> It carries the most decision-relevant uncertainty — nailing that estimate is worth more than tightening all the others. (Units: expected gain in utility ×100. Total value of perfect foresight ≈ ${(totalEVPI*100).toFixed(1)}.)`; }
+      ev.appendChild(note);
+    },30);
+  };
+
+  // tornado
+  const tb=c.querySelector("#tornado");
+  const maxSwing=Math.max(...tor.map(t=>t.swing),1e-9);
+  tor.forEach(t=>{
+    const row=document.createElement("div"); row.className="tor-row";
+    const pct=t.swing/maxSwing*100;
+    row.innerHTML=`<div class="lab">${esc(t.name)}</div><div class="meter"><span style="left:0;width:0%"></span></div>
+      <div class="val">${t.flips?'<span class="flip-flag">can flip!</span>':''}</div>`;
+    tb.appendChild(row); requestAnimationFrame(()=>row.querySelector(".meter>span").style.width=Math.max(2,pct)+"%");
+  });
+
+  // narrative insights
+  const ins=c.querySelector("#insights");
+  if(dom.length){
+    const names=[...new Set(dom.map(d=>d.loser))];
+    ins.appendChild(insight("bad","✕","You can drop "+(names.length>1?"options":"an option"),
+      `<strong>${names.map(esc).join(", ")}</strong> ${names.length>1?'are':'is'} beaten on every single criterion by another option. No matter how you weight things, ${names.length>1?'they':'it'} can't win — eliminate and simplify.`));
+  }
+  if(lead.pBest<0.62){
+    ins.appendChild(insight("teal","≈","It's honestly close",
+      `${esc(lead.name)} only wins ${pLead}% of the time. Treating this as a clear answer would be overconfident — the value of information below tells you whether more research could actually settle it.`));
+  } else {
+    ins.appendChild(insight("gold","★","Why it wins",
+      `${esc(lead.name)} leads on expected value and holds up across ${pLead}% of simulated outcomes. The tornado above shows which weight you'd have to change your mind about for that to break.`));
+  }
+  if(second && second.p90 > lead.p50){
+    ins.appendChild(insight("","↑","The upside case",
+      `${esc(second.name)} has a real shot — its strong outcomes (up to ${sc(second.p90)}) beat ${esc(lead.name)}'s typical result (${sc(lead.p50)}). If you're optimistic about ${esc(second.name)}'s uncertain factors, it could be the better gamble.`));
+  }
+  renderGut(c.querySelector("#gut"),lead);
+
+  c.querySelector("#b4").onclick=()=>{S.step=3;render();};
+  c.querySelector("#print").onclick=()=>window.print();
+  return c;
+}
+
+function insight(cls,icon,title,body){
+  const d=document.createElement("div"); d.className="insight";
+  d.innerHTML=`<div class="ic ${cls}">${icon}</div><div><h4>${title}</h4><p>${body}</p></div>`; return d;
+}
+function buildModelbar(el){
+  const riskWord=S.risk<-0.33?"Risk-averse":S.risk>0.33?"Risk-seeking":"Risk-neutral";
+  el.innerHTML=`
+    <div class="mb"><div class="top"><label>Risk attitude</label><span class="v" id="rv">${riskWord}</span></div>
+      <input type="range" min="-1" max="1" step="0.1" value="${S.risk}" id="riskr"/>
+      <p class="hint" style="margin-top:6px">Risk-averse weights bad outcomes more heavily (concave utility).</p></div>
+    <div class="mb"><div class="top"><label>Simulation depth</label><span class="v" id="tv">${S.trials.toLocaleString()} trials</span></div>
+      <input type="range" min="0" max="2" step="1" value="${[2000,6000,20000].indexOf(S.trials)<0?1:[2000,6000,20000].indexOf(S.trials)}" id="trir"/>
+      <p class="hint" style="margin-top:6px">More trials = smoother, slower. Re-runs on release.</p></div>`;
+  const rr=el.querySelector("#riskr");
+  rr.addEventListener("input",e=>{const v=+e.target.value;el.querySelector("#rv").textContent=v<-0.33?"Risk-averse":v>0.33?"Risk-seeking":"Risk-neutral";});
+  rr.addEventListener("change",e=>{S.risk=+e.target.value;render();});
+  const tr=el.querySelector("#trir");
+  tr.addEventListener("input",e=>{el.querySelector("#tv").textContent=[2000,6000,20000][+e.target.value].toLocaleString()+" trials";});
+  tr.addEventListener("change",e=>{S.trials=[2000,6000,20000][+e.target.value];render();});
+}
+function renderGut(el,lead){
+  if(!S.gut){
+    el.innerHTML=`<h4>Model vs. intuition</h4><p>The simulation points to <strong>${esc(lead.name)}</strong>. Does that match your gut?</p>
+      <div class="choices"><button class="btn small primary" id="gy">Yes — and now I know why</button><button class="btn small" id="gn">No — I expected different</button></div>`;
+    el.querySelector("#gy").onclick=()=>{S.gut="y";renderGut(el,lead);};
+    el.querySelector("#gn").onclick=()=>{S.gut="n";renderGut(el,lead);};
+  } else if(S.gut==="y"){
+    el.innerHTML=`<h4>Then commit.</h4><p>Numbers and instinct agree — the strongest signal you get. You can now defend <strong>${esc(lead.name)}</strong> with a probability, a range, and the one thing still worth checking.</p>`;
+  } else {
+    el.innerHTML=`<h4>That disagreement is data.</h4><p>When the model and your gut split, the model is usually missing a criterion or mis-weighting one. Don't override the math blindly — go encode what your gut knows: add the missing factor, or fix a weight, and simulate again.</p>
+      <div class="choices" style="margin-top:6px"><button class="btn small" id="ge">← Revisit criteria</button></div>`;
+    el.querySelector("#ge").onclick=()=>{S.step=2;render();};
+  }
+}
+
+/* ---------------- Example & boot ---------------- */
+function loadExample(){
+  S=blank(); S.title="Which job offer should I take?"; S.risk=-0.2; S.trials=6000;
+  const A={id:nid(),name:"Helix (startup)"}, B={id:nid(),name:"Northwind (big co)"}, C={id:nid(),name:"Counteroffer (stay)"};
+  S.options=[A,B,C];
+  const comp ={id:nid(),name:"Compensation",     weight:20,uncertainty:"low", cells:{[A.id]:5,[B.id]:8,[C.id]:6}};
+  const grow ={id:nid(),name:"Growth & learning",weight:45,uncertainty:"high",cells:{[A.id]:9,[B.id]:4,[C.id]:3}};
+  const bal  ={id:nid(),name:"Work–life balance",weight:20,uncertainty:"med", cells:{[A.id]:4,[B.id]:7,[C.id]:5}};
+  const stab ={id:nid(),name:"Stability",        weight:15,uncertainty:"low", cells:{[A.id]:3,[B.id]:8,[C.id]:6}};
+  S.criteria=[comp,grow,bal,stab];
+  S.step=4; S.gut=null; render(); toast("Loaded an example — note 'Growth' is both heavy and uncertain.");
+}
+$("#btn-example").onclick=loadExample;
+$("#btn-reset").onclick=()=>{ if(confirm("Clear and start over?")){S=blank();render();} };
+render();
+</script>
+</body>
+</html>

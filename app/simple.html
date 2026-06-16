@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Crossroads — a decision studio</title>
+<style>
+  :root {
+    --bg: #f4f2ed;
+    --surface: #ffffff;
+    --surface-2: #faf9f6;
+    --ink: #1b1b29;
+    --muted: #6b6b7b;
+    --line: #e6e3db;
+    --accent: #5b4bdb;
+    --accent-soft: #ece9fc;
+    --accent-ink: #3a2fb0;
+    --gold: #c98a13;
+    --gold-soft: #fbf1d8;
+    --good: #2f9e6b;
+    --bad: #d1604a;
+    --shadow: 0 1px 2px rgba(27,27,41,.04), 0 8px 30px rgba(27,27,41,.08);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* Header */
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 26px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 38px; height: 38px; flex: none; }
+  .brand h1 { font-size: 21px; margin: 0; letter-spacing: -.02em; font-weight: 700; }
+  .brand p { margin: 0; font-size: 13px; color: var(--muted); }
+  .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Stepper */
+  .stepper { display: flex; gap: 6px; margin-bottom: 22px; }
+  .stepper .step {
+    flex: 1; display: flex; align-items: center; gap: 9px;
+    padding: 11px 12px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; font-size: 13.5px; color: var(--muted); cursor: pointer;
+    transition: .15s; min-width: 0;
+  }
+  .stepper .step:hover { border-color: #d4d0c5; }
+  .stepper .step .num {
+    width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: var(--surface-2); border: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--muted);
+  }
+  .stepper .step .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .stepper .step.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .stepper .step.active .num { background: rgba(255,255,255,.22); border-color: transparent; color: #fff; }
+  .stepper .step.done .num { background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
+  @media (max-width: 640px) { .stepper .step .lbl { display: none; } .stepper .step { justify-content: center; } }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 26px; }
+  .card h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.015em; }
+  .card .sub { margin: 0 0 22px; color: var(--muted); font-size: 14.5px; }
+
+  label.field { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 7px; }
+  input[type=text] {
+    width: 100%; padding: 12px 14px; font-size: 15.5px; color: var(--ink);
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 11px; font-family: inherit;
+    transition: .15s;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--accent); background: #fff; box-shadow: 0 0 0 3px var(--accent-soft); }
+  input::placeholder { color: #adaa9f; }
+
+  .row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .row .grip { color: #c7c3b8; font-size: 18px; flex: none; user-select: none; }
+  .row input[type=text] { flex: 1; }
+  .icon-btn {
+    flex: none; width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--surface-2); color: var(--muted); cursor: pointer; font-size: 17px; line-height: 1;
+    display: grid; place-items: center; transition: .15s;
+  }
+  .icon-btn:hover { color: var(--bad); border-color: #e7c4bc; background: #fdf3f0; }
+
+  .add-btn {
+    margin-top: 4px; padding: 11px 15px; border-radius: 11px; border: 1.5px dashed #d3cfc4;
+    background: transparent; color: var(--accent-ink); font-weight: 600; font-size: 14px; cursor: pointer; width: 100%;
+    font-family: inherit; transition: .15s;
+  }
+  .add-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    font-family: inherit; font-size: 14.5px; font-weight: 600; padding: 12px 20px; border-radius: 11px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; transition: .15s;
+  }
+  .btn:hover { border-color: #cfcbbf; background: var(--surface-2); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #4e3fce; }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+  .btn.ghost:hover { color: var(--ink); background: var(--surface-2); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.small { padding: 8px 13px; font-size: 13px; }
+  .footer-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; gap: 12px; }
+
+  .hint { font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+  .pill-note { display:inline-block; background: var(--accent-soft); color: var(--accent-ink); font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; }
+
+  /* Weight sliders */
+  .factor-weight { margin-bottom: 18px; }
+  .factor-weight .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .factor-weight .name { font-weight: 600; font-size: 15px; }
+  .factor-weight .wlabel { font-size: 12.5px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; background: var(--line); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(91,75,219,.45); }
+  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 3px solid #fff; }
+
+  /* Scoring grid */
+  .score-block { margin-bottom: 24px; }
+  .score-block .qhead { display:flex; align-items:baseline; gap:8px; margin-bottom: 4px; }
+  .score-block h3 { font-size: 15.5px; margin: 0; }
+  .score-block .wtag { font-size: 11.5px; color: var(--muted); }
+  .score-block .qsub { font-size: 13px; color: var(--muted); margin: 0 0 13px; }
+  .opt-score { display: flex; align-items: center; gap: 12px; margin-bottom: 11px; }
+  .opt-score .oname { width: 130px; flex: none; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scale { display: flex; gap: 6px; flex-wrap: wrap; }
+  .scale button {
+    width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2);
+    color: var(--muted); font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; transition: .12s;
+  }
+  .scale button:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .scale button.sel { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(91,75,219,.3); }
+  @media (max-width: 560px) { .opt-score { flex-direction: column; align-items: flex-start; gap: 6px; } .opt-score .oname { width: auto; } }
+
+  /* Results */
+  .winner-banner {
+    background: linear-gradient(135deg, #2a2350, #463aa6);
+    color: #fff; border-radius: var(--radius); padding: 24px 26px; margin-bottom: 18px; position: relative; overflow: hidden;
+  }
+  .winner-banner .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin: 0 0 6px; font-weight: 600; }
+  .winner-banner .wname { font-size: 27px; font-weight: 700; margin: 0; letter-spacing: -.02em; }
+  .winner-banner .verdict { margin: 12px 0 0; font-size: 14.5px; opacity: .95; max-width: 90%; }
+  .winner-banner .spark { position:absolute; right:-30px; top:-30px; width:160px; height:160px; opacity:.13; }
+
+  .ranklist { margin: 0 0 8px; }
+  .rankrow { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .rankrow:last-child { border-bottom: none; }
+  .rankrow .rtop { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .rankrow .place { width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--muted); flex: none; }
+  .rankrow.first .place { background: var(--gold-soft); border-color: #ecd9a6; color: var(--gold); }
+  .rankrow .rname { font-weight: 600; font-size: 15.5px; flex: 1; }
+  .rankrow .rscore { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .bar { height: 9px; border-radius: 6px; background: var(--surface-2); overflow: hidden; border:1px solid var(--line); }
+  .bar > span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg,#6e5ee6,#5b4bdb); transition: width .6s cubic-bezier(.2,.7,.2,1); }
+  .rankrow.first .bar > span { background: linear-gradient(90deg,#e6b84d,#c98a13); }
+
+  .insight { display: flex; gap: 13px; padding: 16px; border-radius: 13px; background: var(--surface-2); border: 1px solid var(--line); margin-top: 14px; }
+  .insight .ic { width: 34px; height: 34px; border-radius: 9px; flex: none; display: grid; place-items: center; background: var(--accent-soft); }
+  .insight .ic.gold { background: var(--gold-soft); }
+  .insight .ic.flip { background: #e8f4ee; }
+  .insight h4 { margin: 0 0 3px; font-size: 14px; }
+  .insight p { margin: 0; font-size: 13.5px; color: #4a4a58; }
+  .insight strong { color: var(--ink); }
+
+  .gut { margin-top: 18px; padding: 18px; border-radius: 13px; border: 1px dashed #cfcbbf; background: #fff; }
+  .gut h4 { margin: 0 0 4px; font-size: 15px; }
+  .gut p { margin: 0 0 13px; font-size: 13.5px; color: var(--muted); }
+  .gut .choices { display: flex; gap: 9px; flex-wrap: wrap; }
+  .gut .reflect { margin-top: 14px; font-size: 14px; padding: 14px; border-radius: 11px; background: var(--accent-soft); color: var(--accent-ink); display: none; }
+  .gut .reflect.show { display: block; }
+
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+  .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 11px; font-size: 13.5px; opacity: 0; pointer-events: none; transition: .25s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .mini-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  .mini-table th, .mini-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .mini-table th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  .mini-table td.num, .mini-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  details.contrib { margin-top: 14px; }
+  details.contrib summary { cursor: pointer; font-size: 13.5px; color: var(--accent-ink); font-weight: 600; }
+
+  @media print {
+    .stepper, .top-actions, .footer-nav, .gut .choices, .add-btn { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; border: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="48" height="48" rx="11" fill="#5b4bdb"/>
+        <path d="M24 9v12m0 0l-9 9m9-9l9 9" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="24" cy="9.5" r="3.4" fill="#fff"/>
+        <circle cx="14" cy="31" r="3.4" fill="#c9b6ff"/>
+        <circle cx="34" cy="31" r="3.4" fill="#c9b6ff"/>
+      </svg>
+      <div>
+        <h1>Crossroads</h1>
+        <p>Think through any decision — and see what's really driving it.</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn small ghost" id="btn-example">Try an example</button>
+      <button class="btn small ghost" id="btn-share">Copy share link</button>
+      <button class="btn small ghost" id="btn-reset">Reset</button>
+    </div>
+  </header>
+
+  <nav class="stepper" id="stepper"></nav>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------------- State ---------------- */
+let uid = 1;
+const nid = () => "id" + (uid++);
+
+function blankState() {
+  return {
+    step: 1,
+    title: "",
+    options: [ {id: nid(), name: ""}, {id: nid(), name: ""} ],
+    factors: [ {id: nid(), name: "", weight: 3} ],
+    scores: {},            // scores[optionId][factorId] = 1..5
+    gut: { answered: false, agreed: null }
+  };
+}
+let S = blankState();
+
+const STEPS = [
+  {n: 1, label: "Frame"},
+  {n: 2, label: "What matters"},
+  {n: 3, label: "Score"},
+  {n: 4, label: "Verdict"}
+];
+
+/* ---------------- Helpers ---------------- */
+const $ = (sel, el=document) => el.querySelector(sel);
+const esc = s => (s||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function getScore(oid, fid) {
+  return (S.scores[oid] && S.scores[oid][fid]) || 0;
+}
+function setScore(oid, fid, v) {
+  if (!S.scores[oid]) S.scores[oid] = {};
+  S.scores[oid][fid] = v;
+}
+function validOptions() { return S.options.filter(o => o.name.trim()); }
+function validFactors() { return S.factors.filter(f => f.name.trim()); }
+
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ---------------- Core decision math ---------------- */
+// Ranking uses RAW weighted sums (normalization doesn't change order).
+// Display score = normalized weighted average on the 1-5 scale, shown as %.
+function compute() {
+  const opts = validOptions();
+  const facs = validFactors();
+  const totalW = facs.reduce((a, f) => a + f.weight, 0);
+
+  const results = opts.map(o => {
+    let raw = 0;        // sum w*score
+    let scored = 0;     // how many factors actually scored
+    facs.forEach(f => {
+      const s = getScore(o.id, f.id);
+      raw += f.weight * s;
+      if (s > 0) scored++;
+    });
+    const avg = totalW > 0 ? raw / totalW : 0;     // 0..5
+    return { id: o.id, name: o.name.trim(), raw, avg, pct: (avg / 5) * 100, scored };
+  });
+
+  results.sort((a, b) => b.raw - a.raw);
+  return { results, facs, opts, totalW };
+}
+
+// What is the single factor most responsible for the gap between #1 and #2?
+function decidingFactor(winner, runner, facs) {
+  let best = null;
+  facs.forEach(f => {
+    const d = getScore(winner.id, f.id) - getScore(runner.id, f.id); // winner advantage
+    const contrib = f.weight * d;
+    if (best === null || contrib > best.contrib) best = { f, contrib, d };
+  });
+  return best;
+}
+
+// Where is the winner weakest relative to the runner-up?
+function weakSpot(winner, runner, facs) {
+  let worst = null;
+  facs.forEach(f => {
+    const d = getScore(winner.id, f.id) - getScore(runner.id, f.id);
+    if (d < 0 && (worst === null || d < worst.d)) worst = { f, d };
+  });
+  return worst; // may be null if winner >= runner on everything
+}
+
+// Smallest single weight change that flips #1 and #2.
+// D = raw(winner) - raw(runner) > 0. For factor k where runner scores higher (d_k<0),
+// required weight w' = w_k + D/|d_k| flips it (others fixed). Pick smallest feasible (<=5) increase.
+function flipAnalysis(winner, runner, facs) {
+  const D = winner.raw - runner.raw;
+  let best = null;
+  facs.forEach(f => {
+    const d = getScore(runner.id, f.id) - getScore(winner.id, f.id); // runner advantage on f
+    if (d > 0) {
+      const required = f.weight + D / d;          // new importance weight needed
+      const increase = required - f.weight;
+      if (required <= 5.0001 && (best === null || increase < best.increase)) {
+        best = { f, required: Math.min(5, Math.ceil(required)), exactRequired: required, increase };
+      }
+    }
+  });
+  return best; // null => robust; no single in-range change flips it
+}
+
+/* ---------------- Rendering ---------------- */
+function render() {
+  renderStepper();
+  const main = $("#main");
+  if (S.step === 1) main.innerHTML = "", main.appendChild(viewFrame());
+  else if (S.step === 2) main.innerHTML = "", main.appendChild(viewFactors());
+  else if (S.step === 3) main.innerHTML = "", main.appendChild(viewScore());
+  else main.innerHTML = "", main.appendChild(viewResults());
+}
+
+function renderStepper() {
+  const el = $("#stepper");
+  el.innerHTML = "";
+  STEPS.forEach(st => {
+    const d = document.createElement("button");
+    d.className = "step" + (S.step === st.n ? " active" : "") + (S.step > st.n ? " done" : "");
+    d.innerHTML = `<span class="num">${S.step > st.n ? "✓" : st.n}</span><span class="lbl">${st.label}</span>`;
+    d.onclick = () => { if (st.n < S.step || canAdvance(S.step)) { S.step = st.n; render(); } };
+    el.appendChild(d);
+  });
+}
+
+function canAdvance(from) {
+  if (from === 1) return S.title.trim() && validOptions().length >= 2;
+  if (from === 2) return validFactors().length >= 1;
+  if (from === 3) return true;
+  return true;
+}
+
+/* Step 1 — Frame the decision */
+function viewFrame() {
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = `
+    <h2>What are you deciding?</h2>
+    <p class="sub">Name the decision, then list the options you're choosing between.</p>
+    <label class="field">The decision</label>
+    <input type="text" id="title" placeholder="e.g. Which job offer should I take?" value="${esc(S.title)}" />
+    <div style="height:22px"></div>
+    <label class="field">Options on the table</label>
+    <div id="opts"></div>
+    <button class="add-btn" id="add-opt">+ Add an option</button>
+    <div class="footer-nav">
+      <span class="hint">${validOptions().length} option${validOptions().length===1?"":"s"} so far — you need at least 2.</span>
+      <button class="btn primary" id="next1">Next: what matters →</button>
+    </div>
+  `;
+  c.querySelector("#title").addEventListener("input", e => { S.title = e.target.value; });
+  const optsBox = c.querySelector("#opts");
+  S.options.forEach((o, i) => optsBox.appendChild(optRow(o, i)));
+  c.querySelector("#add-opt").onclick = () => { S.options.push({id: nid(), name: ""}); render(); };
+  const nxt = c.querySelector("#next1");
+  nxt.onclick = () => {
+    if (!S.title.trim()) return toast("Give your decision a name first.");
+    if (validOptions().length < 2) return toast("Add at least two real options.");
+    S.step = 2; render();
+  };
+  return c;
+}
+function optRow(o, i) {
+  const r = document.createElement("div");
+  r.className = "row";
+  r.innerHTML = `<span class="grip">⋮⋮</span>
+    <input type="text" placeholder="Option ${i+1}" value="${esc(o.name)}" />
+    <button class="icon-btn" title="Remove">✕</button>`;
+  r.querySelector("input").addEventListener("input", e => { o.name = e.target.value; });
+  r.querySelector(".icon-btn").onclick = () => {
+    if (S.options.length <= 2) return toast("You need at least two options.");
+    S.options = S.options.filter(x => x.id !== o.id);
+    delete S.scores[o.id];
+    render();
+  };
+  return r;
+}
+
+/* Step 2 — Factors + weights */
+function viewFactors() {
+  const c = document.createElement("div");
+  c.className = "card";
+  c.innerHTML = `
+    <h2>What matters in this decision?</h2>
+    <p class="sub">List the factors you care about, then set how much each one matters. Be honest about the weights — this is where the decision is really made.</p>
+    <div id="facs"></div>
+    <button class="add-btn" id="add-fac">+ Add a factor</button>
+    <div class="footer-nav">
+      <button class="btn" id="back2">← Back</button>
+      <button class="btn primary" id="next2">Next: score them →</button>
+    </div>
+  `;
+  const box = c.querySelector("#facs");
+  S.factors.forEach((f, i) => box.appendChild(factorRow(f, i)));
+  c.querySelector("#add-fac").onclick = () => { S.factors.push({id: nid(), name: "", weight: 3}); render(); };
+  c.querySelector("#back2").onclick = () => { S.step = 1; render(); };
+  c.querySelector("#next2").onclick = () => {
+    if (validFactors().length < 1) return toast("Add at least one factor that matters.");
+    S.step = 3; render();
+  };
+  return c;
+}
+const WORDS = {1:"Barely matters",2:"Minor",3:"Matters",4:"Important",5:"Critical"};
+function factorRow(f, i) {
+  const r = document.createElement("div");
+  r.className = "factor-weight";
+  r.innerHTML = `
+    <div class="row" style="margin-bottom:9px">
+      <input type="text" placeholder="Factor ${i+1} — e.g. Salary, Commute, Growth" value="${esc(f.name)}" />
+      <button class="icon-btn" title="Remove">✕</button>
+    </div>
+    <div class="top">
+      <span class="name">Importance</span>
+      <span class="wlabel">${WORDS[f.weight]} · ${f.weight}/5</span>
+    </div>
+    <input type="range" min="1" max="5" step="1" value="${f.weight}" />
+  `;
+  r.querySelector("input[type=text]").addEventListener("input", e => { f.name = e.target.value; });
+  const range = r.querySelector("input[type=range]");
+  const lab = r.querySelector(".wlabel");
+  range.addEventListener("input", e => { f.weight = +e.target.value; lab.textContent = `${WORDS[f.weight]} · ${f.weight}/5`; });
+  r.querySelector(".icon-btn").onclick = () => {
+    if (S.factors.length <= 1) return toast("Keep at least one factor.");
+    S.factors = S.factors.filter(x => x.id !== f.id);
+    Object.values(S.scores).forEach(m => delete m[f.id]);
+    render();
+  };
+  return r;
+}
+
+/* Step 3 — Score each option on each factor */
+function viewScore() {
+  const c = document.createElement("div");
+  c.className = "card";
+  const facs = validFactors(), opts = validOptions();
+  c.innerHTML = `
+    <h2>How does each option do?</h2>
+    <p class="sub">For every factor, rate each option from 1 (poor) to 5 (excellent). Skipped ratings count as zero.</p>
+    <div id="grid"></div>
+    <div class="footer-nav">
+      <button class="btn" id="back3">← Back</button>
+      <button class="btn primary" id="next3">See the verdict →</button>
+    </div>
+  `;
+  const grid = c.querySelector("#grid");
+  facs.forEach(f => {
+    const blk = document.createElement("div");
+    blk.className = "score-block";
+    blk.innerHTML = `<div class="qhead"><h3>${esc(f.name)}</h3><span class="wtag">· ${WORDS[f.weight].toLowerCase()}</span></div>
+      <p class="qsub">Rate each option on ${esc(f.name).toLowerCase()}.</p>`;
+    opts.forEach(o => {
+      const row = document.createElement("div");
+      row.className = "opt-score";
+      const scale = document.createElement("div"); scale.className = "scale";
+      for (let v = 1; v <= 5; v++) {
+        const b = document.createElement("button");
+        b.textContent = v;
+        if (getScore(o.id, f.id) === v) b.classList.add("sel");
+        b.onclick = () => {
+          setScore(o.id, f.id, v);
+          scale.querySelectorAll("button").forEach((x, idx) => x.classList.toggle("sel", idx+1 === v));
+        };
+        scale.appendChild(b);
+      }
+      row.innerHTML = `<div class="oname">${esc(o.name)}</div>`;
+      row.appendChild(scale);
+      blk.appendChild(row);
+    });
+    grid.appendChild(blk);
+  });
+  c.querySelector("#back3").onclick = () => { S.step = 2; render(); };
+  c.querySelector("#next3").onclick = () => { S.step = 4; S.gut = {answered:false, agreed:null}; render(); };
+  return c;
+}
+
+/* Step 4 — Verdict + insight */
+function viewResults() {
+  const c = document.createElement("div");
+  c.className = "card";
+  const { results, facs } = compute();
+
+  if (results.length < 2 || facs.length < 1) {
+    c.innerHTML = `<div class="empty"><h2>Not enough to decide yet</h2><p>Go back and add at least two options and one factor.</p></div>
+      <div class="footer-nav"><button class="btn" id="back4">← Back</button><span></span></div>`;
+    c.querySelector("#back4").onclick = () => { S.step = 3; render(); };
+    return c;
+  }
+
+  const winner = results[0], runner = results[1];
+  const gapPts = winner.pct - runner.pct;
+  let closeness, closeWord;
+  if (gapPts < 3) { closeness = "It's essentially a tie."; closeWord = "a coin-flip"; }
+  else if (gapPts < 9) { closeness = "It's close."; closeWord = "close"; }
+  else if (gapPts < 20) { closeness = "There's a clear lean."; closeWord = "a clear lean"; }
+  else { closeness = "It's a decisive call."; closeWord = "decisive"; }
+
+  const deciding = decidingFactor(winner, runner, facs);
+  const weak = weakSpot(winner, runner, facs);
+  const flip = flipAnalysis(winner, runner, facs);
+
+  c.innerHTML = `
+    <div class="winner-banner">
+      <svg class="spark" viewBox="0 0 100 100" fill="none"><path d="M50 5v40m0 0L20 75m30-30l30 30" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+      <p class="eyebrow">The math points to</p>
+      <p class="wname">${esc(winner.name)}</p>
+      <p class="verdict">${closeness} ${esc(winner.name)} scores <strong>${Math.round(winner.pct)}%</strong> against ${esc(runner.name)}'s <strong>${Math.round(runner.pct)}%</strong> on the things you said matter.</p>
+    </div>
+    <div class="ranklist" id="ranklist"></div>
+    <div id="insights"></div>
+    ${contribTable(results, facs)}
+    <div class="gut" id="gut"></div>
+    <div class="footer-nav">
+      <button class="btn" id="back4">← Adjust</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn small" id="print">Print / Save PDF</button>
+        <button class="btn small" id="share2">Copy share link</button>
+      </div>
+    </div>
+  `;
+
+  // ranking bars
+  const rl = c.querySelector("#ranklist");
+  const max = Math.max(...results.map(r => r.pct), 1);
+  results.forEach((r, i) => {
+    const row = document.createElement("div");
+    row.className = "rankrow" + (i === 0 ? " first" : "");
+    row.innerHTML = `
+      <div class="rtop">
+        <span class="place">${i+1}</span>
+        <span class="rname">${esc(r.name)}</span>
+        <span class="rscore">${Math.round(r.pct)}%</span>
+      </div>
+      <div class="bar"><span style="width:0%"></span></div>`;
+    rl.appendChild(row);
+    requestAnimationFrame(() => { row.querySelector(".bar > span").style.width = (r.pct / max * 100) + "%"; });
+  });
+
+  // insights
+  const ins = c.querySelector("#insights");
+  if (deciding && deciding.contrib > 0) {
+    ins.appendChild(insightEl("gold", "★",
+      "What's tipping it",
+      `<strong>${esc(deciding.f.name)}</strong> is doing the most work here. It's where ${esc(winner.name)} pulls ahead, combined with how much weight you gave it. Take that factor away and the decision could look very different.`));
+  }
+  if (weak) {
+    ins.appendChild(insightEl("", "△",
+      "The trade-off you're accepting",
+      `${esc(winner.name)} is actually <strong>weaker on ${esc(weak.f.name)}</strong> than ${esc(runner.name)}. You're choosing to live with that. Make sure it's a price you're willing to pay.`));
+  }
+  if (flip) {
+    ins.appendChild(insightEl("flip", "⇄",
+      "What would change your mind",
+      `This isn't locked in. If you rated <strong>${esc(flip.f.name)}</strong> as ${WORDS[flip.required].toLowerCase()} (${flip.required}/5) instead of ${flip.f.weight}/5, <strong>${esc(runner.name)}</strong> would win instead. Does that factor really matter less to you than the winner's strengths?`));
+  } else {
+    ins.appendChild(insightEl("flip", "⇄",
+      "How robust this is",
+      `No single change in how much one factor matters flips the result — ${esc(winner.name)} wins across a range of reasonable weightings. That's a sign you can trust it.`));
+  }
+
+  // gut check
+  renderGut(c.querySelector("#gut"), winner, runner);
+
+  c.querySelector("#back4").onclick = () => { S.step = 3; render(); };
+  c.querySelector("#print").onclick = () => window.print();
+  c.querySelector("#share2").onclick = shareLink;
+  return c;
+}
+
+function insightEl(cls, icon, title, body) {
+  const d = document.createElement("div");
+  d.className = "insight";
+  d.innerHTML = `<div class="ic ${cls}">${icon}</div><div><h4>${title}</h4><p>${body}</p></div>`;
+  return d;
+}
+
+function contribTable(results, facs) {
+  let head = `<table class="mini-table"><thead><tr><th>Factor</th><th class="num">Weight</th>`;
+  results.forEach(r => head += `<th class="num">${esc(r.name)}</th>`);
+  head += `</tr></thead><tbody>`;
+  facs.forEach(f => {
+    head += `<tr><td>${esc(f.name)}</td><td class="num">${f.weight}/5</td>`;
+    results.forEach(r => head += `<td class="num">${getScore(r.id, f.id) || "—"}</td>`);
+    head += `</tr>`;
+  });
+  head += `<tr><td><strong>Weighted score</strong></td><td class="num"></td>`;
+  results.forEach(r => head += `<td class="num"><strong>${Math.round(r.pct)}%</strong></td>`);
+  head += `</tr></tbody></table>`;
+  return `<details class="contrib"><summary>See the full scorecard</summary>${head}</details>`;
+}
+
+function renderGut(el, winner, runner) {
+  if (!S.gut.answered) {
+    el.innerHTML = `
+      <h4>Before you commit — what does your gut say?</h4>
+      <p>The math is a mirror, not a master. Does landing on <strong>${esc(winner.name)}</strong> feel right?</p>
+      <div class="choices">
+        <button class="btn small primary" id="g-yes">Yes, that feels right</button>
+        <button class="btn small" id="g-no">No — I expected a different answer</button>
+      </div>`;
+    el.querySelector("#g-yes").onclick = () => { S.gut = {answered:true, agreed:true}; renderGut(el, winner, runner); };
+    el.querySelector("#g-no").onclick = () => { S.gut = {answered:true, agreed:false}; renderGut(el, winner, runner); };
+  } else if (S.gut.agreed) {
+    el.innerHTML = `<h4>Then you have your answer.</h4>
+      <p>When the numbers and your instinct agree, that's the clearest signal you'll get. Go with <strong>${esc(winner.name)}</strong> — and notice you can now say <em>why</em>.</p>`;
+  } else {
+    el.innerHTML = `<h4>That gap is the most useful thing on this page.</h4>
+      <p>When the math and your gut disagree, the model is usually missing something. Either a factor isn't on the list, or one of your weights doesn't match what you truly care about.</p>
+      <div class="reflect show">Go back and ask: what does my gut know that I didn't write down? Add it as a factor, or adjust a weight — then look again. The point isn't to obey the math. It's to find out what you actually value.</div>
+      <div class="choices" style="margin-top:14px"><button class="btn small" id="g-edit">← Revisit factors &amp; weights</button></div>`;
+    el.querySelector("#g-edit").onclick = () => { S.step = 2; render(); };
+  }
+}
+
+/* ---------------- Top actions ---------------- */
+function shareLink() {
+  try {
+    const data = { title:S.title, options:S.options, factors:S.factors, scores:S.scores };
+    const enc = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+    const url = location.origin + location.pathname + "#d=" + enc;
+    navigator.clipboard.writeText(url).then(
+      () => toast("Share link copied to clipboard."),
+      () => { location.hash = "d=" + enc; toast("Link set in the address bar — copy it."); }
+    );
+  } catch(e) { toast("Couldn't build a share link here."); }
+}
+function loadFromHash() {
+  if (!location.hash.startsWith("#d=")) return false;
+  try {
+    const json = decodeURIComponent(escape(atob(location.hash.slice(3))));
+    const data = JSON.parse(json);
+    S = blankState();
+    S.title = data.title || "";
+    S.options = (data.options && data.options.length) ? data.options : S.options;
+    S.factors = (data.factors && data.factors.length) ? data.factors : S.factors;
+    S.scores = data.scores || {};
+    // make sure uid won't collide
+    [...S.options, ...S.factors].forEach(x => { const n = +(String(x.id).replace("id","")); if (n >= uid) uid = n + 1; });
+    S.step = 4;
+    return true;
+  } catch(e) { return false; }
+}
+
+function loadExample() {
+  S = blankState();
+  S.title = "Which job offer should I take?";
+  const o1 = {id:nid(), name:"Startup (Helix)"};
+  const o2 = {id:nid(), name:"Big company (Northwind)"};
+  S.options = [o1, o2];
+  const f1 = {id:nid(), name:"Salary & equity", weight:5};
+  const f2 = {id:nid(), name:"Growth & learning", weight:3};
+  const f3 = {id:nid(), name:"Work-life balance", weight:3};
+  const f4 = {id:nid(), name:"Job security", weight:2};
+  S.factors = [f1, f2, f3, f4];
+  S.scores = {
+    [o1.id]: { [f1.id]:3, [f2.id]:5, [f3.id]:4, [f4.id]:3 },
+    [o2.id]: { [f1.id]:5, [f2.id]:3, [f3.id]:3, [f4.id]:4 }
+  };
+  S.step = 4;
+  render();
+  toast("Loaded an example decision.");
+}
+
+/* ---------------- Boot ---------------- */
+$("#btn-example").onclick = loadExample;
+$("#btn-share").onclick = shareLink;
+$("#btn-reset").onclick = () => { if (confirm("Clear this decision and start over?")) { S = blankState(); location.hash = ""; render(); } };
+
+if (!loadFromHash()) { /* fresh */ }
+render();
+</script>
+</body>
+</html>
