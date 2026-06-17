@@ -80,6 +80,8 @@ interface AnalyzeArgs { title?: string; options: string[]; criteria: { name: str
 function analyze(a: AnalyzeArgs, withVoI: boolean) {
   if (!Array.isArray(a.options) || a.options.length < 2) throw new Error("Provide at least 2 options.");
   if (!Array.isArray(a.criteria) || a.criteria.length < 1) throw new Error("Provide at least 1 criterion.");
+  if (a.options.length > 12) throw new Error("Too many options (max 12) — narrow the field first.");
+  if (a.criteria.length > 12) throw new Error("Too many criteria (max 12) — group or drop minor ones.");
   const options = a.options.map((name, i) => ({ id: "o" + i, name }));
   const warnings: string[] = [];
   const criteria: Crit[] = a.criteria.map((c, i) => {
@@ -94,7 +96,13 @@ function analyze(a: AnalyzeArgs, withVoI: boolean) {
   const sim = simulate(dec, trials, seed);
   const dom = dominance(dec);
   const tor = tornado(dec, sim);
-  const voi = withVoI ? evppi(dec, 140, 140, (seed ^ 0x9e3779b9) >>> 0) : [];
+  // Bound EVPPI work (nested Monte Carlo ~ M*K*O*C^2) by a fixed compute budget.
+  let voi: { criterion: string; value: number }[] = [];
+  if (withVoI) {
+    const O = dec.options.length, C = dec.criteria.length;
+    const mk = Math.max(60, Math.min(140, Math.floor(Math.sqrt(12_000_000 / Math.max(1, O * C * C)))));
+    voi = evppi(dec, mk, mk, (seed ^ 0x9e3779b9) >>> 0);
+  }
   const sc = (v: number) => Math.round(v * 100);
   const ranking = sim.byEV.map((p) => ({ name: p.name, pBestPct: Math.round(p.pBest * 100), expectedValue: sc(p.mean), low: sc(p.p10), high: sc(p.p90) }));
   const lead = ranking[0], pB = sim.byEV[0].pBest;
@@ -117,13 +125,13 @@ const TOOLS = [
   {
     name: "crossroads_analyze_decision",
     description: "Rigorous multi-criteria decision analysis under uncertainty. Returns probability each option is best (Monte Carlo), dominance, sensitivity, and value-of-information (what to research first). Grounds a recommendation in a reproducible computation. Inputs: options[] (>=2), criteria[{name,weight 0-100,uncertainty low|med|high}], scores{[option]:{[criterion]:0-10}}. Optional: model 'utility'|'prospect', risk -1..1, reference_point, loss_aversion, trials, seed, value_of_information.",
-    inputSchema: { type: "object", properties: { title: { type: "string" }, options: { type: "array", items: { type: "string" }, minItems: 2 }, criteria: { type: "array", minItems: 1, items: { type: "object", properties: { name: { type: "string" }, weight: { type: "number" }, uncertainty: { enum: ["low", "med", "high"] } }, required: ["name"] } }, scores: { type: "object", additionalProperties: { type: "object", additionalProperties: { type: "number" } } }, model: { enum: ["utility", "prospect"] }, risk: { type: "number" }, reference_point: { type: "number" }, loss_aversion: { type: "number" }, trials: { type: "integer" }, seed: { type: "integer" }, value_of_information: { type: "boolean" } }, required: ["options", "criteria", "scores"] },
+    inputSchema: { type: "object", properties: { title: { type: "string" }, options: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 12 }, criteria: { type: "array", minItems: 1, maxItems: 12, items: { type: "object", properties: { name: { type: "string" }, weight: { type: "number" }, uncertainty: { enum: ["low", "med", "high"] } }, required: ["name"] } }, scores: { type: "object", additionalProperties: { type: "object", additionalProperties: { type: "number" } } }, model: { enum: ["utility", "prospect"] }, risk: { type: "number" }, reference_point: { type: "number" }, loss_aversion: { type: "number" }, trials: { type: "integer" }, seed: { type: "integer" }, value_of_information: { type: "boolean" } }, required: ["options", "criteria", "scores"] },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
     name: "crossroads_quick_compare",
     description: "Fast weighted compare with probability-of-best (no value-of-information). Inputs: options[] (>=2), criteria[{name,weight}], scores{[option]:{[criterion]:0-10}}.",
-    inputSchema: { type: "object", properties: { options: { type: "array", items: { type: "string" }, minItems: 2 }, criteria: { type: "array", minItems: 1, items: { type: "object", properties: { name: { type: "string" }, weight: { type: "number" }, uncertainty: { enum: ["low", "med", "high"] } }, required: ["name"] } }, scores: { type: "object", additionalProperties: { type: "object", additionalProperties: { type: "number" } } } }, required: ["options", "criteria", "scores"] },
+    inputSchema: { type: "object", properties: { options: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 12 }, criteria: { type: "array", minItems: 1, maxItems: 12, items: { type: "object", properties: { name: { type: "string" }, weight: { type: "number" }, uncertainty: { enum: ["low", "med", "high"] } }, required: ["name"] } }, scores: { type: "object", additionalProperties: { type: "object", additionalProperties: { type: "number" } } } }, required: ["options", "criteria", "scores"] },
     annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
 ];
